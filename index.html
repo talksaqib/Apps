@@ -463,8 +463,23 @@
       }
 
       .app.panel-hidden {
-        grid-template-rows: minmax(0, 1fr) 0;
+        grid-template-rows: 1fr 0;
         gap: 0;
+        padding: 4px;
+      }
+
+      .app.panel-hidden .game-area {
+        padding: 6px;
+        border-radius: 14px;
+      }
+
+      .app.panel-hidden .board-wrap {
+        padding: 2px;
+      }
+
+      .app.panel-hidden #board {
+        width: min(100%, calc(100vh - 148px));
+        height: min(100%, calc(100vh - 148px));
       }
 
       .game-area {
@@ -540,7 +555,17 @@
       }
 
       .app.panel-hidden {
-        grid-template-rows: minmax(0, 1fr) 0;
+        grid-template-rows: 1fr 0;
+        padding: 3px;
+      }
+
+      .app.panel-hidden .game-area {
+        padding: 5px;
+      }
+
+      .app.panel-hidden #board {
+        width: min(100%, calc(100vh - 132px));
+        height: min(100%, calc(100vh - 132px));
       }
 
       .game-area,
@@ -652,32 +677,52 @@
         <div class="controls">
           <div class="compact-row">
             <label>
-              Box Size
-              <select id="sizeSelect">
-                <option value="3">3 × 3</option>
-                <option value="4">4 × 4</option>
-                <option value="5">5 × 5</option>
-                <option value="6">6 × 6</option>
-                <option value="8" selected>8 × 8</option>
-                <option value="10">10 × 10</option>
-                <option value="12">12 × 12</option>
-                <option value="14">14 × 14</option>
-                <option value="16">16 × 16</option>
-                <option value="18">18 × 18</option>
-                <option value="20">20 × 20</option>
-                <option value="24">24 × 24</option>
-                <option value="30">30 × 30</option>
+              Rows
+              <select id="rowsSelect">
+                <option value="3">3 rows</option>
+                <option value="4">4 rows</option>
+                <option value="5">5 rows</option>
+                <option value="6">6 rows</option>
+                <option value="8" selected>8 rows</option>
+                <option value="10">10 rows</option>
+                <option value="12">12 rows</option>
+                <option value="14">14 rows</option>
+                <option value="16">16 rows</option>
+                <option value="18">18 rows</option>
+                <option value="20">20 rows</option>
+                <option value="24">24 rows</option>
+                <option value="30">30 rows</option>
               </select>
             </label>
 
             <label>
-              Theme
-              <select id="themeSelect">
-                <option value="light">Light</option>
-                <option value="dark" selected>Dark</option>
+              Columns
+              <select id="colsSelect">
+                <option value="3">3 columns</option>
+                <option value="4">4 columns</option>
+                <option value="5">5 columns</option>
+                <option value="6">6 columns</option>
+                <option value="8" selected>8 columns</option>
+                <option value="10">10 columns</option>
+                <option value="12">12 columns</option>
+                <option value="14">14 columns</option>
+                <option value="16">16 columns</option>
+                <option value="18">18 columns</option>
+                <option value="20">20 columns</option>
+                <option value="24">24 columns</option>
+                <option value="30">30 columns</option>
               </select>
             </label>
           </div>
+
+          <label>
+            Theme
+            <select id="themeSelect">
+              <option value="light">Light</option>
+              <option value="dark" selected>Dark</option>
+            </select>
+          </label>
+
 
           <label>
             Player 1 Name
@@ -732,7 +777,7 @@
       <section class="card">
         <h2>Result / Status</h2>
         <div class="message" id="statusMessage">Start drawing lines between dots.</div>
-        <p class="small-note">Use “Start & Hide Options” to give more space to the game board. Use “Show Options” anytime to change settings.</p>
+        <p class="small-note">Rows and columns can be different. Use “Start & Hide Options” to give maximum space to the board.</p>
       </section>
     </aside>
   </main>
@@ -743,7 +788,8 @@
 
     const els = {
       app: document.getElementById('app'),
-      sizeSelect: document.getElementById('sizeSelect'),
+      rowsSelect: document.getElementById('rowsSelect'),
+      colsSelect: document.getElementById('colsSelect'),
       themeSelect: document.getElementById('themeSelect'),
       p1Color: document.getElementById('p1Color'),
       p2Color: document.getElementById('p2Color'),
@@ -813,15 +859,18 @@
     }
 
     function newGame(incrementGames = true) {
-      const boxes = Number(els.sizeSelect.value);
-      const totalLines = boxes * (boxes + 1) * 2;
+      const rows = Number(els.rowsSelect.value);
+      const cols = Number(els.colsSelect.value);
+      const totalLines = (rows + 1) * cols + rows * (cols + 1);
 
       state = {
-        boxes,
-        dots: boxes + 1,
-        hLines: Array.from({ length: boxes + 1 }, () => Array(boxes).fill(null)),
-        vLines: Array.from({ length: boxes }, () => Array(boxes + 1).fill(null)),
-        owners: Array.from({ length: boxes }, () => Array(boxes).fill(null)),
+        rows,
+        cols,
+        boxes: rows,
+        dots: Math.max(rows, cols) + 1,
+        hLines: Array.from({ length: rows + 1 }, () => Array(cols).fill(null)),
+        vLines: Array.from({ length: rows }, () => Array(cols + 1).fill(null)),
+        owners: Array.from({ length: rows }, () => Array(cols).fill(null)),
         current: 0,
         scores: [0, 0],
         drawnLines: 0,
@@ -903,14 +952,20 @@
       const padding = Math.max(14, Math.min(36, size * 0.055));
       const usable = size - padding * 2;
 
+      const step = Math.min(usable / state.cols, usable / state.rows);
+      const boardW = step * state.cols;
+      const boardH = step * state.rows;
+
       return {
         width: rect.width,
         height: rect.height,
         size,
         padding,
-        step: usable / state.boxes,
-        x0: (rect.width - usable) / 2,
-        y0: (rect.height - usable) / 2,
+        step,
+        x0: (rect.width - boardW) / 2,
+        y0: (rect.height - boardH) / 2,
+        boardW,
+        boardH,
         usable
       };
     }
@@ -931,8 +986,8 @@
     }
 
     function drawBoxes(m) {
-      for (let r = 0; r < state.boxes; r++) {
-        for (let c = 0; c < state.boxes; c++) {
+      for (let r = 0; r < state.rows; r++) {
+        for (let c = 0; c < state.cols; c++) {
           const owner = state.owners[r][c];
           if (owner === null) continue;
 
@@ -967,8 +1022,8 @@
       ctx.lineCap = 'round';
       ctx.lineWidth = Math.max(2, Math.min(7, m.step * 0.12));
 
-      for (let r = 0; r <= state.boxes; r++) {
-        for (let c = 0; c < state.boxes; c++) {
+      for (let r = 0; r <= state.rows; r++) {
+        for (let c = 0; c < state.cols; c++) {
           const ownerColor = lineOwner(state.hLines[r][c]);
           ctx.strokeStyle = ownerColor || (isDark() ? colors.gridDark : colors.gridLight);
           ctx.globalAlpha = ownerColor ? 1 : (isDark() ? 0.82 : 1);
@@ -979,8 +1034,8 @@
         }
       }
 
-      for (let r = 0; r < state.boxes; r++) {
-        for (let c = 0; c <= state.boxes; c++) {
+      for (let r = 0; r < state.rows; r++) {
+        for (let c = 0; c <= state.cols; c++) {
           const ownerColor = lineOwner(state.vLines[r][c]);
           ctx.strokeStyle = ownerColor || (isDark() ? colors.gridDark : colors.gridLight);
           ctx.globalAlpha = ownerColor ? 1 : (isDark() ? 0.82 : 1);
@@ -1020,8 +1075,8 @@
     function drawDots(m) {
       const radius = Math.max(2.5, Math.min(7, m.step * 0.12));
 
-      for (let r = 0; r <= state.boxes; r++) {
-        for (let c = 0; c <= state.boxes; c++) {
+      for (let r = 0; r <= state.rows; r++) {
+        for (let c = 0; c <= state.cols; c++) {
           ctx.fillStyle = isDark() ? colors.dotDark : colors.dotLight;
           ctx.beginPath();
           ctx.arc(m.x0 + c * m.step, m.y0 + r * m.step, radius, 0, Math.PI * 2);
@@ -1035,8 +1090,8 @@
       let best = null;
       const hit = Math.max(8, Math.min(18, m.step * 0.42));
 
-      for (let r = 0; r <= state.boxes; r++) {
-        for (let c = 0; c < state.boxes; c++) {
+      for (let r = 0; r <= state.rows; r++) {
+        for (let c = 0; c < state.cols; c++) {
           if (state.hLines[r][c]) continue;
           const x1 = m.x0 + c * m.step;
           const x2 = m.x0 + (c + 1) * m.step;
@@ -1049,8 +1104,8 @@
         }
       }
 
-      for (let r = 0; r < state.boxes; r++) {
-        for (let c = 0; c <= state.boxes; c++) {
+      for (let r = 0; r < state.rows; r++) {
+        for (let c = 0; c <= state.cols; c++) {
           if (state.vLines[r][c]) continue;
           const xx = m.x0 + c * m.step;
           const y1 = m.y0 + r * m.step;
@@ -1078,10 +1133,10 @@
 
       if (move.type === 'h') {
         if (move.r > 0) candidates.push([move.r - 1, move.c]);
-        if (move.r < state.boxes) candidates.push([move.r, move.c]);
+        if (move.r < state.rows) candidates.push([move.r, move.c]);
       } else {
         if (move.c > 0) candidates.push([move.r, move.c - 1]);
-        if (move.c < state.boxes) candidates.push([move.r, move.c]);
+        if (move.c < state.cols) candidates.push([move.r, move.c]);
       }
 
       for (const [r, c] of candidates) {
@@ -1200,13 +1255,13 @@
 
     function availableMoves() {
       const moves = [];
-      for (let r = 0; r <= state.boxes; r++) {
-        for (let c = 0; c < state.boxes; c++) {
+      for (let r = 0; r <= state.rows; r++) {
+        for (let c = 0; c < state.cols; c++) {
           if (!state.hLines[r][c]) moves.push({ type: 'h', r, c });
         }
       }
-      for (let r = 0; r < state.boxes; r++) {
-        for (let c = 0; c <= state.boxes; c++) {
+      for (let r = 0; r < state.rows; r++) {
+        for (let c = 0; c <= state.cols; c++) {
           if (!state.vLines[r][c]) moves.push({ type: 'v', r, c });
         }
       }
@@ -1218,10 +1273,10 @@
 
       if (move.type === 'h') {
         if (move.r > 0) candidates.push([move.r - 1, move.c]);
-        if (move.r < state.boxes) candidates.push([move.r, move.c]);
+        if (move.r < state.rows) candidates.push([move.r, move.c]);
       } else {
         if (move.c > 0) candidates.push([move.r, move.c - 1]);
-        if (move.c < state.boxes) candidates.push([move.r, move.c]);
+        if (move.c < state.cols) candidates.push([move.r, move.c]);
       }
 
       let count = 0;
@@ -1245,10 +1300,10 @@
 
       if (move.type === 'h') {
         if (move.r > 0) candidates.push([move.r - 1, move.c]);
-        if (move.r < state.boxes) candidates.push([move.r, move.c]);
+        if (move.r < state.rows) candidates.push([move.r, move.c]);
       } else {
         if (move.c > 0) candidates.push([move.r, move.c - 1]);
-        if (move.c < state.boxes) candidates.push([move.r, move.c]);
+        if (move.c < state.cols) candidates.push([move.r, move.c]);
       }
 
       let risk = 0;
@@ -1314,7 +1369,7 @@
       els.gamesPlayed.textContent = stats.gamesPlayed;
       els.drawnLines.textContent = state.drawnLines;
       els.remainingLines.textContent = state.totalLines - state.drawnLines;
-      els.boxesLeft.textContent = state.boxes * state.boxes - state.scores[0] - state.scores[1];
+      els.boxesLeft.textContent = state.rows * state.cols - state.scores[0] - state.scores[1];
     }
 
     function hexToRgba(hex, alpha) {
@@ -1370,7 +1425,8 @@
       setPanelHidden(true);
     });
     els.resetStatsBtn.addEventListener('click', resetStats);
-    els.sizeSelect.addEventListener('change', () => newGame(true));
+    els.rowsSelect.addEventListener('change', () => newGame(true));
+    els.colsSelect.addEventListener('change', () => newGame(true));
     els.themeSelect.addEventListener('change', () => setTheme(els.themeSelect.value));
 
     els.togglePanelBtn.addEventListener('click', () => {
