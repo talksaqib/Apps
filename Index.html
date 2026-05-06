@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dots & Boxes Game</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --bg2: #fff7ed;
+      --panel: #ffffff;
+      --panel-soft: #f8fafc;
+      --text: #172033;
+      --muted: #6a7384;
+      --border: #d9deea;
+      --line: #dce2ec;
+      --p1: #2563eb;
+      --p2: #f97316;
+      --pc: #7c3aed;
+      --success-bg: #ecfdf5;
+      --success-border: #bbf7d0;
+      --success-text: #166534;
+      --shadow: 0 12px 30px rgba(22, 32, 51, 0.12);
+    }
+
+    body.dark {
+      --bg: #080c14;
+      --bg2: #131827;
+      --panel: #111827;
+      --panel-soft: #0b1220;
+      --text: #f8fafc;
+      --muted: #a7b0c2;
+      --border: #263244;
+      --line: #2d3748;
+      --success-bg: #052e20;
+      --success-border: #14532d;
+      --success-text: #bbf7d0;
+      --shadow: 0 14px 34px rgba(0, 0, 0, 0.42);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--text);
+      background: linear-gradient(135deg, var(--bg) 0%, var(--bg) 52%, var(--bg2) 100%);
+    }
+
+    body { overflow: hidden; }
+
+    .app {
+      width: 100vw;
+      height: 100vh;
+      padding: 12px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 330px;
+      gap: 12px;
+      overflow: hidden;
+      transition: grid-template-columns 0.2s ease;
+    }
+
+    .app.panel-hidden {
+      grid-template-columns: minmax(0, 1fr) 0;
+      gap: 0;
+    }
+
+    .game-area,
+    .side-panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      min-height: 0;
+    }
+
+    .game-area {
+      padding: 14px;
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr);
+      gap: 10px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .top-bar {
+      display: grid;
+      grid-template-columns: auto minmax(230px, 440px) auto;
+      align-items: center;
+      gap: 10px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(22px, 2.4vw, 38px);
+      letter-spacing: -0.04em;
+      white-space: nowrap;
+    }
+
+    .turn-pill {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 13px 18px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, color-mix(in srgb, var(--p1) 18%, var(--panel)), var(--panel-soft));
+      border: 2px solid color-mix(in srgb, var(--p1) 40%, var(--border));
+      font-size: 20px;
+      font-weight: 900;
+      box-shadow: 0 10px 24px rgba(37, 99, 235, 0.16);
+      text-align: center;
+      min-height: 60px;
+    }
+
+    .top-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .icon-btn {
+      width: auto;
+      min-width: 105px;
+      padding: 11px 14px;
+      border-radius: 14px;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    .turn-dot {
+      width: 21px;
+      height: 21px;
+      border-radius: 50%;
+      background: var(--p1);
+      box-shadow: 0 0 0 7px rgba(37, 99, 235, 0.16);
+      flex: 0 0 auto;
+    }
+
+    .scores-top {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .score-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      background: var(--panel-soft);
+      border-radius: 18px;
+      font-weight: 900;
+      font-size: 18px;
+    }
+
+    .score-card .left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .score-card .score-value {
+      font-size: 30px;
+      line-height: 1;
+    }
+
+    .color-chip {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      flex: 0 0 auto;
+      background: var(--p1);
+    }
+
+    .board-wrap {
+      min-height: 0;
+      display: grid;
+      place-items: center;
+      padding: 8px;
+      border-radius: 18px;
+      background: radial-gradient(circle at top left, color-mix(in srgb, var(--panel) 96%, white) 0, var(--panel-soft) 62%, var(--bg) 100%);
+      overflow: hidden;
+    }
+
+    #board {
+      width: min(100%, calc(100vh - 185px));
+      height: min(100%, calc(100vh - 185px));
+      aspect-ratio: 1;
+      border-radius: 18px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06), 0 14px 36px rgba(22,32,51,0.10);
+      touch-action: manipulation;
+      display: block;
+    }
+
+    .side-panel {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      max-height: 100%;
+      min-height: 0;
+      scrollbar-width: thin;
+      scrollbar-color: var(--muted) transparent;
+      transition: transform 0.22s ease, opacity 0.18s ease;
+    }
+
+    .app.panel-hidden .side-panel {
+      transform: translateX(30px);
+      opacity: 0;
+      pointer-events: none;
+      overflow: hidden;
+      padding: 0;
+      border: 0;
+    }
+
+    .side-panel::-webkit-scrollbar { width: 8px; }
+    .side-panel::-webkit-scrollbar-track { background: transparent; }
+    .side-panel::-webkit-scrollbar-thumb {
+      background: var(--muted);
+      border-radius: 999px;
+    }
+
+    .card {
+      flex: 0 0 auto;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      border-radius: 18px;
+      padding: 12px;
+      min-height: 0;
+    }
+
+    .card h2 {
+      margin: 0 0 9px;
+      font-size: 16px;
+    }
+
+    .controls {
+      display: grid;
+      gap: 8px;
+    }
+
+    label {
+      display: grid;
+      gap: 4px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    input,
+    select,
+    button {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 9px 10px;
+      font: inherit;
+      background: var(--panel-soft);
+      color: var(--text);
+      outline: none;
+    }
+
+    input[type="color"] {
+      height: 42px;
+      padding: 4px;
+      cursor: pointer;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: var(--p1);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    button {
+      cursor: pointer;
+      border: 0;
+      font-weight: 900;
+      background: var(--text);
+      color: var(--panel);
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    body.dark button {
+      background: #e5e7eb;
+      color: #0f172a;
+    }
+
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(0); opacity: 0.85; }
+
+    .secondary {
+      background: var(--panel-soft);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    body.dark .secondary {
+      background: #1f2937;
+      color: #f8fafc;
+    }
+
+    .compact-row,
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .stat {
+      padding: 9px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--panel-soft);
+    }
+
+    .stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      margin-bottom: 4px;
+    }
+
+    .stat strong {
+      font-size: 21px;
+    }
+
+    .message {
+      padding: 10px 11px;
+      border-radius: 14px;
+      background: var(--success-bg);
+      border: 1px solid var(--success-border);
+      color: var(--success-text);
+      font-weight: 800;
+      line-height: 1.35;
+      font-size: 13px;
+    }
+
+    .small-note {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(5, 10, 20, 0.55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+      padding: 20px;
+      overflow: hidden;
+    }
+
+    .overlay.show {
+      display: flex;
+    }
+
+    .winner-modal {
+      position: relative;
+      width: min(560px, 92vw);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+      padding: 28px 22px 20px;
+      text-align: center;
+      z-index: 2;
+    }
+
+    .winner-emoji {
+      font-size: 52px;
+      margin-bottom: 8px;
+    }
+
+    .winner-title {
+      margin: 0;
+      font-size: clamp(24px, 4vw, 40px);
+      font-weight: 900;
+    }
+
+    .winner-subtitle {
+      margin: 10px 0 14px;
+      color: var(--muted);
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .winner-score {
+      display: inline-block;
+      padding: 12px 18px;
+      border-radius: 16px;
+      background: var(--panel-soft);
+      border: 1px solid var(--border);
+      font-size: 18px;
+      font-weight: 900;
+      margin-bottom: 18px;
+    }
+
+    .winner-actions {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .winner-actions button {
+      min-width: 150px;
+    }
+
+    .celebration {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 1;
+    }
+
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 18px;
+      top: -30px;
+      border-radius: 2px;
+      opacity: 0.95;
+      animation: confettiFall linear forwards;
+    }
+
+    @keyframes confettiFall {
+      0% {
+        transform: translateY(-40px) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(110vh) rotate(720deg);
+        opacity: 0.85;
+      }
+    }
+
+    @media (max-width: 980px) {
+      .app,
+      .app.panel-hidden {
+        height: 100vh;
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(0, 1fr) minmax(0, 45vh);
+        gap: 8px;
+        overflow: hidden;
+      }
+
+      .app.panel-hidden {
+        grid-template-rows: minmax(0, 1fr) 0;
+        gap: 0;
+      }
+
+      .game-area {
+        min-height: 0;
+        grid-template-rows: auto auto minmax(0, 1fr);
+      }
+
+      .side-panel {
+        min-height: 0;
+        max-height: 100%;
+        overflow-y: auto;
+        overflow-x: hidden;
+      }
+
+      .app.panel-hidden .side-panel {
+        transform: translateY(30px);
+        opacity: 0;
+        pointer-events: none;
+        padding: 0;
+        border: 0;
+      }
+
+      .top-bar {
+        grid-template-columns: 1fr auto;
+      }
+
+      h1 {
+        display: none;
+      }
+
+      .turn-pill {
+        grid-column: 1;
+        min-width: 0;
+        width: 100%;
+        font-size: 17px;
+        min-height: 54px;
+        padding: 10px 12px;
+      }
+
+      .top-actions {
+        grid-column: 2;
+      }
+
+      .icon-btn {
+        min-width: 82px;
+        padding: 10px 11px;
+        font-size: 13px;
+      }
+
+      .score-card {
+        padding: 9px 10px;
+        font-size: 15px;
+      }
+
+      .score-card .score-value {
+        font-size: 24px;
+      }
+
+      #board {
+        width: min(96vw, 100%);
+        height: min(96vw, 100%);
+      }
+    }
+
+    @media (max-width: 560px) {
+      .app,
+      .app.panel-hidden {
+        padding: 6px;
+      }
+
+      .app {
+        grid-template-rows: minmax(0, 1fr) minmax(0, 46vh);
+      }
+
+      .app.panel-hidden {
+        grid-template-rows: minmax(0, 1fr) 0;
+      }
+
+      .game-area,
+      .side-panel {
+        border-radius: 18px;
+        padding: 10px;
+      }
+
+      .game-area {
+        gap: 7px;
+      }
+
+      .turn-pill {
+        font-size: 15px;
+        min-height: 48px;
+      }
+
+      .turn-dot {
+        width: 16px;
+        height: 16px;
+      }
+
+      .icon-btn {
+        min-width: 74px;
+        padding: 9px 9px;
+        font-size: 12px;
+      }
+
+      .score-card {
+        font-size: 13px;
+        padding: 8px 9px;
+      }
+
+      .score-card .score-value {
+        font-size: 21px;
+      }
+
+      .color-chip {
+        width: 11px;
+        height: 11px;
+      }
+
+      .compact-row,
+      .stats-grid,
+      .scores-top {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .board-wrap {
+        padding: 4px;
+      }
+    }
+  </style>
+</head>
+<body class="dark">
+  <main class="app" id="app">
+    <section class="game-area">
+      <div class="top-bar">
+        <h1>Dots & Boxes</h1>
+        <div class="turn-pill" aria-live="polite">
+          <span class="turn-dot" id="turnDot"></span>
+          <span id="turnText">TURN: Player 1</span>
+        </div>
+        <div class="top-actions">
+          <button id="togglePanelBtn" class="icon-btn secondary">Hide Options</button>
+        </div>
+      </div>
+
+      <section class="scores-top" aria-label="Scores">
+        <div class="score-card">
+          <div class="left">
+            <span class="color-chip" id="p1Chip"></span>
+            <span id="p1ScoreName">Player 1</span>
+          </div>
+          <span class="score-value" id="p1Score">0</span>
+        </div>
+
+        <div class="score-card">
+          <div class="left">
+            <span class="color-chip" id="p2Chip"></span>
+            <span id="p2ScoreName">PC</span>
+          </div>
+          <span class="score-value" id="p2Score">0</span>
+        </div>
+      </section>
+
+      <div class="board-wrap">
+        <canvas id="board" width="900" height="900" aria-label="Dots and Boxes game board"></canvas>
+      </div>
+
+      <div class="overlay" id="winnerOverlay">
+        <div class="celebration" id="celebration"></div>
+        <div class="winner-modal">
+          <div class="winner-emoji" id="winnerEmoji">🎉</div>
+          <h2 class="winner-title" id="winnerTitle">Winner!</h2>
+          <p class="winner-subtitle" id="winnerSubtitle">Great game.</p>
+          <div class="winner-score" id="winnerScoreText">Player 1 0 - 0 PC</div>
+          <div class="winner-actions">
+            <button id="playAgainBtn">Play Again</button>
+            <button id="closeWinnerBtn" class="secondary">Close</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside class="side-panel" id="sidePanel">
+      <section class="card">
+        <h2>Game Setup</h2>
+        <div class="controls">
+          <div class="compact-row">
+            <label>
+              Box Size
+              <select id="sizeSelect">
+                <option value="3">3 × 3</option>
+                <option value="4">4 × 4</option>
+                <option value="5">5 × 5</option>
+                <option value="6">6 × 6</option>
+                <option value="8" selected>8 × 8</option>
+                <option value="10">10 × 10</option>
+                <option value="12">12 × 12</option>
+                <option value="14">14 × 14</option>
+                <option value="16">16 × 16</option>
+                <option value="18">18 × 18</option>
+                <option value="20">20 × 20</option>
+                <option value="24">24 × 24</option>
+                <option value="30">30 × 30</option>
+              </select>
+            </label>
+
+            <label>
+              Theme
+              <select id="themeSelect">
+                <option value="light">Light</option>
+                <option value="dark" selected>Dark</option>
+              </select>
+            </label>
+          </div>
+
+          <label>
+            Player 1 Name
+            <input id="p1Name" value="Player 1" maxlength="18" />
+          </label>
+
+          <label>
+            Player 2 Name
+            <input id="p2Name" value="PC" maxlength="18" />
+          </label>
+
+          <label>
+            Opponent
+            <select id="modeSelect">
+              <option value="human">2 Players</option>
+              <option value="pc" selected>Play with PC</option>
+            </select>
+          </label>
+
+          <div class="compact-row">
+            <label>
+              Player 1 Color
+              <input id="p1Color" type="color" value="#2563eb" />
+            </label>
+            <label>
+              Player 2 Color
+              <input id="p2Color" type="color" value="#f97316" />
+            </label>
+          </div>
+
+          <label>
+            PC Color
+            <input id="pcColor" type="color" value="#7c3aed" />
+          </label>
+
+          <button id="newGameBtn">New Game</button>
+          <button id="startHideBtn" class="secondary">Start & Hide Options</button>
+          <button id="resetStatsBtn" class="secondary">Reset Statistics</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Statistics</h2>
+        <div class="stats-grid">
+          <div class="stat"><span>Games</span><strong id="gamesPlayed">0</strong></div>
+          <div class="stat"><span>Drawn</span><strong id="drawnLines">0</strong></div>
+          <div class="stat"><span>Remaining</span><strong id="remainingLines">0</strong></div>
+          <div class="stat"><span>Boxes Left</span><strong id="boxesLeft">0</strong></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Result / Status</h2>
+        <div class="message" id="statusMessage">Start drawing lines between dots.</div>
+        <p class="small-note">Use “Start & Hide Options” to give more space to the game board. Use “Show Options” anytime to change settings.</p>
+      </section>
+    </aside>
+  </main>
+
+  <script>
+    const canvas = document.getElementById('board');
+    const ctx = canvas.getContext('2d');
+
+    const els = {
+      app: document.getElementById('app'),
+      sizeSelect: document.getElementById('sizeSelect'),
+      themeSelect: document.getElementById('themeSelect'),
+      p1Color: document.getElementById('p1Color'),
+      p2Color: document.getElementById('p2Color'),
+      pcColor: document.getElementById('pcColor'),
+      p1Name: document.getElementById('p1Name'),
+      p2Name: document.getElementById('p2Name'),
+      modeSelect: document.getElementById('modeSelect'),
+      newGameBtn: document.getElementById('newGameBtn'),
+      startHideBtn: document.getElementById('startHideBtn'),
+      resetStatsBtn: document.getElementById('resetStatsBtn'),
+      togglePanelBtn: document.getElementById('togglePanelBtn'),
+      turnDot: document.getElementById('turnDot'),
+      turnText: document.getElementById('turnText'),
+      p1Chip: document.getElementById('p1Chip'),
+      p2Chip: document.getElementById('p2Chip'),
+      p1ScoreName: document.getElementById('p1ScoreName'),
+      p2ScoreName: document.getElementById('p2ScoreName'),
+      p1Score: document.getElementById('p1Score'),
+      p2Score: document.getElementById('p2Score'),
+      gamesPlayed: document.getElementById('gamesPlayed'),
+      drawnLines: document.getElementById('drawnLines'),
+      remainingLines: document.getElementById('remainingLines'),
+      boxesLeft: document.getElementById('boxesLeft'),
+      statusMessage: document.getElementById('statusMessage'),
+      winnerOverlay: document.getElementById('winnerOverlay'),
+      winnerTitle: document.getElementById('winnerTitle'),
+      winnerSubtitle: document.getElementById('winnerSubtitle'),
+      winnerScoreText: document.getElementById('winnerScoreText'),
+      winnerEmoji: document.getElementById('winnerEmoji'),
+      celebration: document.getElementById('celebration'),
+      playAgainBtn: document.getElementById('playAgainBtn'),
+      closeWinnerBtn: document.getElementById('closeWinnerBtn')
+    };
+
+    const colors = {
+      p1: localStorage.getItem('dotsBoxesP1Color') || '#2563eb',
+      p2: localStorage.getItem('dotsBoxesP2Color') || '#f97316',
+      pc: localStorage.getItem('dotsBoxesPCColor') || '#7c3aed',
+      hoverLight: '#111827',
+      hoverDark: '#f8fafc',
+      dotLight: '#172033',
+      dotDark: '#e5e7eb',
+      gridLight: '#dce2ec',
+      gridDark: '#2d3748'
+    };
+
+    let state;
+    let stats = JSON.parse(
+      localStorage.getItem('dotsBoxesStats') ||
+      '{"gamesPlayed":0,"p1Wins":0,"p2Wins":0,"draws":0}'
+    );
+
+    function isDark() {
+      return document.body.classList.contains('dark');
+    }
+
+    function getNames() {
+      const player1 = els.p1Name.value.trim() || 'Player 1';
+      const isPc = els.modeSelect.value === 'pc';
+      const player2 = isPc ? 'PC' : (els.p2Name.value.trim() || 'Player 2');
+      return [player1, player2];
+    }
+
+    function getInitial(name) {
+      const clean = String(name || '?').trim();
+      return (clean[0] || '?').toUpperCase();
+    }
+
+    function newGame(incrementGames = true) {
+      const boxes = Number(els.sizeSelect.value);
+      const totalLines = boxes * (boxes + 1) * 2;
+
+      state = {
+        boxes,
+        dots: boxes + 1,
+        hLines: Array.from({ length: boxes + 1 }, () => Array(boxes).fill(null)),
+        vLines: Array.from({ length: boxes }, () => Array(boxes + 1).fill(null)),
+        owners: Array.from({ length: boxes }, () => Array(boxes).fill(null)),
+        current: 0,
+        scores: [0, 0],
+        drawnLines: 0,
+        totalLines,
+        hover: null,
+        gameOver: false,
+        names: getNames(),
+        mode: els.modeSelect.value
+      };
+
+      if (state.mode === 'pc') {
+        els.p2Name.value = 'PC';
+      }
+
+      if (incrementGames) {
+        stats.gamesPlayed += 1;
+        saveStats();
+      }
+
+      hideWinnerOverlay();
+      setStatus('Start drawing lines between dots.');
+      resizeCanvasForDisplay();
+      updateUI();
+      draw();
+    }
+
+    function saveStats() {
+      localStorage.setItem('dotsBoxesStats', JSON.stringify(stats));
+    }
+
+    function resetStats() {
+      stats = { gamesPlayed: 0, p1Wins: 0, p2Wins: 0, draws: 0 };
+      saveStats();
+      updateUI();
+      setStatus('Statistics reset. Current game continues.');
+    }
+
+    function setTheme(theme) {
+      document.body.classList.toggle('dark', theme === 'dark');
+      localStorage.setItem('dotsBoxesTheme', theme);
+      resizeCanvasForDisplay();
+      draw();
+    }
+
+    function setPanelHidden(hidden) {
+      els.app.classList.toggle('panel-hidden', hidden);
+      els.togglePanelBtn.textContent = hidden ? 'Show Options' : 'Hide Options';
+      localStorage.setItem('dotsBoxesPanelHidden', hidden ? 'yes' : 'no');
+      window.setTimeout(() => {
+        resizeCanvasForDisplay();
+        draw();
+      }, 240);
+    }
+
+    function applyPlayerColors() {
+      colors.p1 = els.p1Color.value;
+      colors.p2 = els.p2Color.value;
+      colors.pc = els.pcColor.value;
+
+      localStorage.setItem('dotsBoxesP1Color', colors.p1);
+      localStorage.setItem('dotsBoxesP2Color', colors.p2);
+      localStorage.setItem('dotsBoxesPCColor', colors.pc);
+
+      updateUI();
+      draw();
+    }
+
+    function resizeCanvasForDisplay() {
+      const rect = canvas.getBoundingClientRect();
+      const ratio = window.devicePixelRatio || 1;
+      canvas.width = Math.max(1, Math.round(rect.width * ratio));
+      canvas.height = Math.max(1, Math.round(rect.height * ratio));
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    }
+
+    function boardMetrics() {
+      const rect = canvas.getBoundingClientRect();
+      const size = Math.min(rect.width, rect.height);
+      const padding = Math.max(14, Math.min(36, size * 0.055));
+      const usable = size - padding * 2;
+
+      return {
+        width: rect.width,
+        height: rect.height,
+        size,
+        padding,
+        step: usable / state.boxes,
+        x0: (rect.width - usable) / 2,
+        y0: (rect.height - usable) / 2,
+        usable
+      };
+    }
+
+    function lineOwner(line) {
+      if (!line) return null;
+      return line.player === 0 ? colors.p1 : (state.mode === 'pc' ? colors.pc : colors.p2);
+    }
+
+    function draw() {
+      if (!state) return;
+      const m = boardMetrics();
+      ctx.clearRect(0, 0, m.width, m.height);
+      drawBoxes(m);
+      drawLines(m);
+      drawHover(m);
+      drawDots(m);
+    }
+
+    function drawBoxes(m) {
+      for (let r = 0; r < state.boxes; r++) {
+        for (let c = 0; c < state.boxes; c++) {
+          const owner = state.owners[r][c];
+          if (owner === null) continue;
+
+          ctx.fillStyle =
+            owner === 0
+              ? hexToRgba(colors.p1, 0.22)
+              : hexToRgba(state.mode === 'pc' ? colors.pc : colors.p2, 0.22);
+
+          ctx.fillRect(
+            m.x0 + c * m.step + 2,
+            m.y0 + r * m.step + 2,
+            Math.max(1, m.step - 4),
+            Math.max(1, m.step - 4)
+          );
+
+          if (m.step > 20) {
+            ctx.fillStyle = owner === 0 ? colors.p1 : (state.mode === 'pc' ? colors.pc : colors.p2);
+            ctx.font = `900 ${Math.max(11, m.step * 0.36)}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(
+              getInitial(state.names[owner]),
+              m.x0 + (c + 0.5) * m.step,
+              m.y0 + (r + 0.5) * m.step
+            );
+          }
+        }
+      }
+    }
+
+    function drawLines(m) {
+      ctx.lineCap = 'round';
+      ctx.lineWidth = Math.max(2, Math.min(7, m.step * 0.12));
+
+      for (let r = 0; r <= state.boxes; r++) {
+        for (let c = 0; c < state.boxes; c++) {
+          const ownerColor = lineOwner(state.hLines[r][c]);
+          ctx.strokeStyle = ownerColor || (isDark() ? colors.gridDark : colors.gridLight);
+          ctx.globalAlpha = ownerColor ? 1 : (isDark() ? 0.82 : 1);
+          ctx.beginPath();
+          ctx.moveTo(m.x0 + c * m.step, m.y0 + r * m.step);
+          ctx.lineTo(m.x0 + (c + 1) * m.step, m.y0 + r * m.step);
+          ctx.stroke();
+        }
+      }
+
+      for (let r = 0; r < state.boxes; r++) {
+        for (let c = 0; c <= state.boxes; c++) {
+          const ownerColor = lineOwner(state.vLines[r][c]);
+          ctx.strokeStyle = ownerColor || (isDark() ? colors.gridDark : colors.gridLight);
+          ctx.globalAlpha = ownerColor ? 1 : (isDark() ? 0.82 : 1);
+          ctx.beginPath();
+          ctx.moveTo(m.x0 + c * m.step, m.y0 + r * m.step);
+          ctx.lineTo(m.x0 + c * m.step, m.y0 + (r + 1) * m.step);
+          ctx.stroke();
+        }
+      }
+
+      ctx.globalAlpha = 1;
+    }
+
+    function drawHover(m) {
+      if (!state.hover || state.gameOver || isPcTurn()) return;
+
+      ctx.strokeStyle = isDark() ? colors.hoverDark : colors.hoverLight;
+      ctx.lineWidth = Math.max(4, Math.min(9, m.step * 0.16));
+      ctx.globalAlpha = 0.65;
+      ctx.lineCap = 'round';
+
+      const { type, r, c } = state.hover;
+      ctx.beginPath();
+
+      if (type === 'h') {
+        ctx.moveTo(m.x0 + c * m.step, m.y0 + r * m.step);
+        ctx.lineTo(m.x0 + (c + 1) * m.step, m.y0 + r * m.step);
+      } else {
+        ctx.moveTo(m.x0 + c * m.step, m.y0 + r * m.step);
+        ctx.lineTo(m.x0 + c * m.step, m.y0 + (r + 1) * m.step);
+      }
+
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
+    function drawDots(m) {
+      const radius = Math.max(2.5, Math.min(7, m.step * 0.12));
+
+      for (let r = 0; r <= state.boxes; r++) {
+        for (let c = 0; c <= state.boxes; c++) {
+          ctx.fillStyle = isDark() ? colors.dotDark : colors.dotLight;
+          ctx.beginPath();
+          ctx.arc(m.x0 + c * m.step, m.y0 + r * m.step, radius, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+
+    function nearestLine(x, y) {
+      const m = boardMetrics();
+      let best = null;
+      const hit = Math.max(8, Math.min(18, m.step * 0.42));
+
+      for (let r = 0; r <= state.boxes; r++) {
+        for (let c = 0; c < state.boxes; c++) {
+          if (state.hLines[r][c]) continue;
+          const x1 = m.x0 + c * m.step;
+          const x2 = m.x0 + (c + 1) * m.step;
+          const yy = m.y0 + r * m.step;
+
+          if (x >= x1 - hit && x <= x2 + hit) {
+            const d = Math.abs(y - yy);
+            if (d <= hit && (!best || d < best.d)) best = { type: 'h', r, c, d };
+          }
+        }
+      }
+
+      for (let r = 0; r < state.boxes; r++) {
+        for (let c = 0; c <= state.boxes; c++) {
+          if (state.vLines[r][c]) continue;
+          const xx = m.x0 + c * m.step;
+          const y1 = m.y0 + r * m.step;
+          const y2 = m.y0 + (r + 1) * m.step;
+
+          if (y >= y1 - hit && y <= y2 + hit) {
+            const d = Math.abs(x - xx);
+            if (d <= hit && (!best || d < best.d)) best = { type: 'v', r, c, d };
+          }
+        }
+      }
+
+      return best ? { type: best.type, r: best.r, c: best.c } : null;
+    }
+
+    function setLine(move, player) {
+      if (move.type === 'h') state.hLines[move.r][move.c] = { player };
+      else state.vLines[move.r][move.c] = { player };
+      state.drawnLines += 1;
+    }
+
+    function checkCompletedBoxes(move, player) {
+      const completed = [];
+      const candidates = [];
+
+      if (move.type === 'h') {
+        if (move.r > 0) candidates.push([move.r - 1, move.c]);
+        if (move.r < state.boxes) candidates.push([move.r, move.c]);
+      } else {
+        if (move.c > 0) candidates.push([move.r, move.c - 1]);
+        if (move.c < state.boxes) candidates.push([move.r, move.c]);
+      }
+
+      for (const [r, c] of candidates) {
+        if (state.owners[r][c] !== null) continue;
+        const closed =
+          state.hLines[r][c] &&
+          state.hLines[r + 1][c] &&
+          state.vLines[r][c] &&
+          state.vLines[r][c + 1];
+
+        if (closed) {
+          state.owners[r][c] = player;
+          state.scores[player] += 1;
+          completed.push({ r, c });
+        }
+      }
+
+      return completed;
+    }
+
+    function makeMove(move) {
+      if (!move || state.gameOver) return;
+
+      if (
+        (move.type === 'h' && state.hLines[move.r][move.c]) ||
+        (move.type === 'v' && state.vLines[move.r][move.c])
+      ) return;
+
+      const player = state.current;
+      setLine(move, player);
+
+      const completed = checkCompletedBoxes(move, player);
+      const name = state.names[player];
+
+      if (completed.length === 0) {
+        state.current = 1 - state.current;
+        setStatus(`${name} played. Turn switched.`);
+      } else {
+        setStatus(`${name} scored ${completed.length} box${completed.length > 1 ? 'es' : ''} and keeps the turn.`);
+      }
+
+      state.hover = null;
+      finishIfOver();
+      updateUI();
+      draw();
+
+      if (!state.gameOver && isPcTurn()) {
+        setTimeout(pcMove, 350);
+      }
+    }
+
+    function finishIfOver() {
+      if (state.drawnLines < state.totalLines) return;
+
+      state.gameOver = true;
+
+      const [p1, p2] = state.names;
+      let title, subtitle, emoji;
+
+      if (state.scores[0] > state.scores[1]) {
+        stats.p1Wins += 1;
+        title = `${p1} Wins!`;
+        subtitle = `Congratulations! ${p1} completed more boxes.`;
+        emoji = '🎆';
+      } else if (state.scores[1] > state.scores[0]) {
+        stats.p2Wins += 1;
+        title = `${p2} Wins!`;
+        subtitle = `Congratulations! ${p2} completed more boxes.`;
+        emoji = '🎉';
+      } else {
+        stats.draws += 1;
+        title = `It's a Draw!`;
+        subtitle = `Both players finished with the same score.`;
+        emoji = '🤝';
+      }
+
+      saveStats();
+      setStatus(title);
+      showWinnerOverlay(title, subtitle, `${p1} ${state.scores[0]} - ${state.scores[1]} ${p2}`, emoji);
+    }
+
+    function showWinnerOverlay(title, subtitle, scoreText, emoji) {
+      els.winnerTitle.textContent = title;
+      els.winnerSubtitle.textContent = subtitle;
+      els.winnerScoreText.textContent = scoreText;
+      els.winnerEmoji.textContent = emoji;
+      els.winnerOverlay.classList.add('show');
+      launchCelebration();
+    }
+
+    function hideWinnerOverlay() {
+      els.winnerOverlay.classList.remove('show');
+      els.celebration.innerHTML = '';
+    }
+
+    function launchCelebration() {
+      els.celebration.innerHTML = '';
+      const palette = [colors.p1, state.mode === 'pc' ? colors.pc : colors.p2, '#facc15', '#22c55e', '#ec4899', '#38bdf8'];
+
+      for (let i = 0; i < 70; i++) {
+        const piece = document.createElement('span');
+        piece.className = 'confetti';
+        piece.style.left = `${Math.random() * 100}%`;
+        piece.style.background = palette[i % palette.length];
+        piece.style.animationDuration = `${3 + Math.random() * 2.8}s`;
+        piece.style.animationDelay = `${Math.random() * 0.5}s`;
+        piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+        piece.style.opacity = `${0.75 + Math.random() * 0.25}`;
+        els.celebration.appendChild(piece);
+      }
+    }
+
+    function isPcTurn() {
+      return state && state.mode === 'pc' && state.current === 1 && !state.gameOver;
+    }
+
+    function availableMoves() {
+      const moves = [];
+      for (let r = 0; r <= state.boxes; r++) {
+        for (let c = 0; c < state.boxes; c++) {
+          if (!state.hLines[r][c]) moves.push({ type: 'h', r, c });
+        }
+      }
+      for (let r = 0; r < state.boxes; r++) {
+        for (let c = 0; c <= state.boxes; c++) {
+          if (!state.vLines[r][c]) moves.push({ type: 'v', r, c });
+        }
+      }
+      return moves;
+    }
+
+    function wouldComplete(move) {
+      const candidates = [];
+
+      if (move.type === 'h') {
+        if (move.r > 0) candidates.push([move.r - 1, move.c]);
+        if (move.r < state.boxes) candidates.push([move.r, move.c]);
+      } else {
+        if (move.c > 0) candidates.push([move.r, move.c - 1]);
+        if (move.c < state.boxes) candidates.push([move.r, move.c]);
+      }
+
+      let count = 0;
+
+      for (const [r, c] of candidates) {
+        if (state.owners[r][c] !== null) continue;
+
+        const top = state.hLines[r][c] || (move.type === 'h' && move.r === r && move.c === c);
+        const bottom = state.hLines[r + 1][c] || (move.type === 'h' && move.r === r + 1 && move.c === c);
+        const left = state.vLines[r][c] || (move.type === 'v' && move.r === r && move.c === c);
+        const right = state.vLines[r][c + 1] || (move.type === 'v' && move.r === r && move.c === c + 1);
+
+        if (top && bottom && left && right) count += 1;
+      }
+
+      return count;
+    }
+
+    function thirdSideRisk(move) {
+      const candidates = [];
+
+      if (move.type === 'h') {
+        if (move.r > 0) candidates.push([move.r - 1, move.c]);
+        if (move.r < state.boxes) candidates.push([move.r, move.c]);
+      } else {
+        if (move.c > 0) candidates.push([move.r, move.c - 1]);
+        if (move.c < state.boxes) candidates.push([move.r, move.c]);
+      }
+
+      let risk = 0;
+
+      for (const [r, c] of candidates) {
+        if (state.owners[r][c] !== null) continue;
+
+        const sides = [
+          Boolean(state.hLines[r][c]) || (move.type === 'h' && move.r === r && move.c === c),
+          Boolean(state.hLines[r + 1][c]) || (move.type === 'h' && move.r === r + 1 && move.c === c),
+          Boolean(state.vLines[r][c]) || (move.type === 'v' && move.r === r && move.c === c),
+          Boolean(state.vLines[r][c + 1]) || (move.type === 'v' && move.r === r && move.c === c + 1)
+        ].filter(Boolean).length;
+
+        if (sides === 3) risk += 1;
+      }
+
+      return risk;
+    }
+
+    function pcMove() {
+      if (!isPcTurn()) return;
+
+      const moves = availableMoves();
+      if (!moves.length) return;
+
+      const scoring = moves
+        .map(move => ({ move, score: wouldComplete(move) }))
+        .filter(item => item.score > 0)
+        .sort((a, b) => b.score - a.score);
+
+      let chosen;
+      if (scoring.length) {
+        chosen = scoring[0].move;
+      } else {
+        const safe = moves.filter(move => thirdSideRisk(move) === 0);
+        const pool = safe.length ? safe : moves;
+        chosen = pool[Math.floor(Math.random() * pool.length)];
+      }
+
+      makeMove(chosen);
+    }
+
+    function updateUI() {
+      if (!state) return;
+
+      const names = getNames();
+      if (!state.gameOver) state.names = names;
+
+      els.p1ScoreName.textContent = state.names[0];
+      els.p2ScoreName.textContent = state.names[1];
+      els.p1Score.textContent = state.scores[0];
+      els.p2Score.textContent = state.scores[1];
+
+      els.p1Chip.style.background = colors.p1;
+      els.p2Chip.style.background = state.mode === 'pc' ? colors.pc : colors.p2;
+
+      const currentColor = state.current === 0 ? colors.p1 : (state.mode === 'pc' ? colors.pc : colors.p2);
+      els.turnDot.style.background = currentColor;
+      els.turnDot.style.boxShadow = `0 0 0 7px ${hexToRgba(currentColor, 0.18)}`;
+      els.turnText.textContent = state.gameOver ? 'GAME OVER' : `TURN: ${state.names[state.current]}`;
+
+      els.gamesPlayed.textContent = stats.gamesPlayed;
+      els.drawnLines.textContent = state.drawnLines;
+      els.remainingLines.textContent = state.totalLines - state.drawnLines;
+      els.boxesLeft.textContent = state.boxes * state.boxes - state.scores[0] - state.scores[1];
+    }
+
+    function hexToRgba(hex, alpha) {
+      const value = hex.replace('#', '');
+      const r = parseInt(value.slice(0, 2), 16);
+      const g = parseInt(value.slice(2, 4), 16);
+      const b = parseInt(value.slice(4, 6), 16);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    function setStatus(text) {
+      els.statusMessage.textContent = text;
+    }
+
+    function pointerPosition(event) {
+      const rect = canvas.getBoundingClientRect();
+      const touch = event.touches ? event.touches[0] : event;
+      return {
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top
+      };
+    }
+
+    canvas.addEventListener('mousemove', event => {
+      if (!state || state.gameOver || isPcTurn()) return;
+      const { x, y } = pointerPosition(event);
+      state.hover = nearestLine(x, y);
+      draw();
+    });
+
+    canvas.addEventListener('mouseleave', () => {
+      if (!state) return;
+      state.hover = null;
+      draw();
+    });
+
+    canvas.addEventListener('click', event => {
+      if (!state || isPcTurn()) return;
+      const { x, y } = pointerPosition(event);
+      makeMove(nearestLine(x, y));
+    });
+
+    canvas.addEventListener('touchstart', event => {
+      if (!state || isPcTurn()) return;
+      event.preventDefault();
+      const { x, y } = pointerPosition(event);
+      makeMove(nearestLine(x, y));
+    }, { passive: false });
+
+    els.newGameBtn.addEventListener('click', () => newGame(true));
+    els.startHideBtn.addEventListener('click', () => {
+      newGame(true);
+      setPanelHidden(true);
+    });
+    els.resetStatsBtn.addEventListener('click', resetStats);
+    els.sizeSelect.addEventListener('change', () => newGame(true));
+    els.themeSelect.addEventListener('change', () => setTheme(els.themeSelect.value));
+
+    els.togglePanelBtn.addEventListener('click', () => {
+      setPanelHidden(!els.app.classList.contains('panel-hidden'));
+    });
+
+    els.p1Color.addEventListener('input', applyPlayerColors);
+    els.p2Color.addEventListener('input', applyPlayerColors);
+    els.pcColor.addEventListener('input', applyPlayerColors);
+
+    els.modeSelect.addEventListener('change', () => {
+      if (els.modeSelect.value === 'pc') {
+        els.p2Name.value = 'PC';
+      } else if (els.p2Name.value.trim().toLowerCase() === 'pc') {
+        els.p2Name.value = 'Player 2';
+      }
+      newGame(true);
+    });
+
+    els.p1Name.addEventListener('input', updateUI);
+    els.p2Name.addEventListener('input', updateUI);
+
+    els.playAgainBtn.addEventListener('click', () => newGame(true));
+    els.closeWinnerBtn.addEventListener('click', hideWinnerOverlay);
+    els.winnerOverlay.addEventListener('click', (e) => {
+      if (e.target === els.winnerOverlay) hideWinnerOverlay();
+    });
+
+    window.addEventListener('resize', () => {
+      resizeCanvasForDisplay();
+      draw();
+    });
+
+    const savedTheme = localStorage.getItem('dotsBoxesTheme') || 'dark';
+    els.themeSelect.value = savedTheme;
+    els.p1Color.value = colors.p1;
+    els.p2Color.value = colors.p2;
+    els.pcColor.value = colors.pc;
+
+    setTheme(savedTheme);
+    newGame(false);
+
+    const savedPanelHidden = localStorage.getItem('dotsBoxesPanelHidden') === 'yes';
+    setPanelHidden(savedPanelHidden);
+  </script>
+</body>
+</html>
