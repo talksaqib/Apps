@@ -3,1129 +3,1323 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DSR Appointment Data Audit</title>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <title>Dots & Boxes Game</title>
   <style>
     :root {
-      --bg: #f6f7fb;
-      --card: #ffffff;
+      --bg: #f5f7fb;
+      --bg2: #fff7ed;
+      --panel: #ffffff;
+      --panel-soft: #f8fafc;
       --text: #172033;
-      --muted: #647084;
-      --line: #d9dfeb;
-      --accent: #2563eb;
-      --accent-dark: #1d4ed8;
-      --danger: #b42318;
-      --danger-bg: #fff1f0;
-      --ok: #067647;
-      --ok-bg: #ecfdf3;
-      --warn-bg: #fff8e6;
-      --shadow: 0 12px 35px rgba(15, 23, 42, 0.08);
+      --muted: #6a7384;
+      --border: #d9deea;
+      --line: #dce2ec;
+      --p1: #2563eb;
+      --p2: #f97316;
+      --pc: #7c3aed;
+      --success-bg: #ecfdf5;
+      --success-border: #bbf7d0;
+      --success-text: #166534;
+      --shadow: 0 12px 30px rgba(22, 32, 51, 0.12);
+    }
+
+    body.dark {
+      --bg: #080c14;
+      --bg2: #131827;
+      --panel: #111827;
+      --panel-soft: #0b1220;
+      --text: #f8fafc;
+      --muted: #a7b0c2;
+      --border: #263244;
+      --line: #2d3748;
+      --success-bg: #052e20;
+      --success-border: #14532d;
+      --success-text: #bbf7d0;
+      --shadow: 0 14px 34px rgba(0, 0, 0, 0.42);
     }
 
     * { box-sizing: border-box; }
 
     html, body {
+      margin: 0;
+      width: 100%;
       height: 100%;
-      overflow: hidden;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--text);
+      background: linear-gradient(135deg, var(--bg) 0%, var(--bg) 52%, var(--bg2) 100%);
     }
 
-    body {
-      margin: 0;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: var(--bg);
-      color: var(--text);
-    }
+    body { overflow: hidden; }
 
     .app {
-      width: 100%;
-      max-width: none;
+      width: 100vw;
       height: 100vh;
-      margin: 0;
-      padding: 5px 6px;
-      display: flex;
-      flex-direction: column;
+      padding: 14px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 14px;
       overflow: hidden;
     }
 
-    .hero {
-      flex: 0 0 auto;
-      background: linear-gradient(135deg, #0f172a, #1e3a8a);
-      color: white;
-      border-radius: 14px;
-      padding: 10px 20px;
+    .game-area,
+    .side-panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 22px;
       box-shadow: var(--shadow);
-      margin-bottom: 8px;
+      min-height: 0;
     }
 
-    h1, h2, h3 { margin: 0; }
-
-    .hero h1 {
-      font-size: clamp(21px, 2.4vw, 28px);
-      line-height: 1;
-      letter-spacing: -0.04em;
-      margin-bottom: 3px;
+    .game-area {
+      padding: 16px;
+      display: grid;
+      grid-template-rows: auto auto minmax(0, 1fr);
+      gap: 12px;
+      overflow: hidden;
+      position: relative;
     }
 
-    .hero p {
-      color: #dbeafe;
-      max-width: 1000px;
-      font-size: 12px;
-      line-height: 1.15;
+    .top-bar {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      gap: 12px;
+    }
+
+    h1 {
+      grid-column: 1;
       margin: 0;
+      font-size: clamp(24px, 2.5vw, 40px);
+      letter-spacing: -0.04em;
+      white-space: nowrap;
     }
 
-    .grid {
-      flex: 1 1 auto;
+    .turn-pill {
+      grid-column: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 13px;
+      padding: 15px 22px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, color-mix(in srgb, var(--p1) 18%, var(--panel)), var(--panel-soft));
+      border: 2px solid color-mix(in srgb, var(--p1) 40%, var(--border));
+      font-size: 22px;
+      font-weight: 900;
+      box-shadow: 0 10px 24px rgba(37, 99, 235, 0.16);
+      text-align: center;
+      min-height: 66px;
+      min-width: min(440px, 42vw);
+    }
+
+    .turn-dot {
+      width: 23px;
+      height: 23px;
+      border-radius: 50%;
+      background: var(--p1);
+      box-shadow: 0 0 0 7px rgba(37, 99, 235, 0.16);
+      flex: 0 0 auto;
+    }
+
+    .scores-top {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .score-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 14px 16px;
+      border: 1px solid var(--border);
+      background: var(--panel-soft);
+      border-radius: 18px;
+      font-weight: 900;
+      font-size: 18px;
+    }
+
+    .score-card .left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .score-card .score-value {
+      font-size: 32px;
+      line-height: 1;
+    }
+
+    .color-chip {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      flex: 0 0 auto;
+      background: var(--p1);
+    }
+
+    .board-wrap {
       min-height: 0;
       display: grid;
-      grid-template-columns: 270px minmax(0, 1fr);
-      gap: 8px;
-      align-items: stretch;
+      place-items: center;
+      padding: 10px;
+      border-radius: 18px;
+      background: radial-gradient(circle at top left, color-mix(in srgb, var(--panel) 96%, white) 0, var(--panel-soft) 62%, var(--bg) 100%);
+      overflow: hidden;
+    }
+
+    #board {
+      width: min(100%, calc(100vh - 200px));
+      height: min(100%, calc(100vh - 200px));
+      aspect-ratio: 1;
+      border-radius: 18px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06), 0 14px 36px rgba(22,32,51,0.10);
+      touch-action: manipulation;
+      display: block;
+    }
+
+    .side-panel {
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      max-height: 100%;
+      min-height: 0;
+      scrollbar-width: thin;
+      scrollbar-color: var(--muted) transparent;
+    }
+
+    .side-panel::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .side-panel::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .side-panel::-webkit-scrollbar-thumb {
+      background: var(--muted);
+      border-radius: 999px;
     }
 
     .card {
-      background: var(--card);
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      box-shadow: var(--shadow);
-      padding: 10px;
+      flex: 0 0 auto;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      border-radius: 18px;
+      padding: 12px;
       min-height: 0;
     }
 
-    .stack {
-      height: 100%;
-      display: grid;
-      gap: 8px;
-      align-content: start;
-      overflow: hidden;
+    .card h2 {
+      margin: 0 0 9px;
+      font-size: 16px;
     }
 
-    section.card {
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
+    .controls {
+      display: grid;
+      gap: 8px;
     }
 
     label {
-      display: block;
-      font-size: 9px;
-      font-weight: 700;
-      color: #334155;
-      text-transform: uppercase;
-      letter-spacing: .04em;
-      margin-bottom: 3px;
-    }
-
-    input, select, textarea, button {
-      font: inherit;
-    }
-
-    input[type="file"], input[type="month"], input[type="date"], select, .search-input {
-      width: 100%;
-      border: 1px solid var(--line);
-      border-radius: 9px;
-      background: white;
-      color: var(--text);
-      padding: 6px 8px;
-      outline: none;
-      transition: border-color .15s, box-shadow .15s;
-      font-size: 12px;
-    }
-
-    input:focus, select:focus, textarea:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 4px rgba(37, 99, 235, .12);
-    }
-
-    .rules-list {
-      margin: 0;
-      padding-left: 18px;
+      display: grid;
+      gap: 4px;
+      color: var(--muted);
       font-size: 11px;
-      line-height: 1.3;
-      color: #334155;
-      max-height: 165px;
-      overflow: auto;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
-    .rules-list li { margin-bottom: 5px; }
+    input,
+    select,
+    button {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 9px 10px;
+      font: inherit;
+      background: var(--panel-soft);
+      color: var(--text);
+      outline: none;
+    }
+
+    input[type="color"] {
+      height: 42px;
+      padding: 4px;
+      cursor: pointer;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: var(--p1);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
 
     button {
-      border: 0;
-      border-radius: 9px;
-      padding: 7px 10px;
-      font-size: 12px;
-      font-weight: 800;
       cursor: pointer;
-      background: var(--accent);
-      color: white;
-      transition: transform .1s, background .15s, opacity .15s;
+      border: 0;
+      font-weight: 900;
+      background: var(--text);
+      color: var(--panel);
+      transition: transform 0.15s ease, opacity 0.15s ease;
     }
 
-    button:hover { background: var(--accent-dark); }
-    button:active { transform: translateY(1px); }
-    button:disabled { opacity: .45; cursor: not-allowed; }
-
-    .btn-secondary {
-      background: #eef2ff;
-      color: #1e3a8a;
-    }
-    .btn-secondary:hover { background: #e0e7ff; }
-
-    .btn-danger {
-      background: #fee4e2;
-      color: var(--danger);
-    }
-    .btn-danger:hover { background: #fecdca; }
-
-    .actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: center;
+    body.dark button {
+      background: #e5e7eb;
+      color: #0f172a;
     }
 
-    .filters {
+    button:hover { transform: translateY(-1px); }
+    button:active { transform: translateY(0); opacity: 0.85; }
+
+    .secondary {
+      background: var(--panel-soft);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    body.dark .secondary {
+      background: #1f2937;
+      color: #f8fafc;
+    }
+
+    .compact-row,
+    .stats-grid {
       display: grid;
-      grid-template-columns: 1fr;
+      grid-template-columns: 1fr 1fr;
       gap: 8px;
     }
 
-    .date-row {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 8px;
+    .stat {
+      padding: 9px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--panel-soft);
     }
 
-    .results-top {
-      flex: 0 0 auto;
-      display: grid;
-      grid-template-columns: minmax(470px, 1fr) minmax(280px, .85fr);
-      gap: 8px;
-      align-items: start;
-      background: var(--card);
-      padding-bottom: 7px;
-      margin-bottom: 7px;
-    }
-
-    .summary {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 8px;
-      margin-bottom: 0;
-    }
-
-    .metric {
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      padding: 7px 10px;
-      background: #fbfdff;
-    }
-
-    .metric b {
+    .stat span {
       display: block;
-      font-size: 18px;
-      letter-spacing: -0.04em;
-      margin-bottom: 0;
-    }
-
-    .metric span {
-      color: var(--muted);
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: .04em;
-    }
-
-    .status-line {
-      min-height: 16px;
       color: var(--muted);
       font-size: 11px;
-      margin-top: 5px;
+      margin-bottom: 4px;
     }
 
-    .notice {
-      border-radius: 10px;
-      padding: 8px;
-      font-size: 11px;
-      line-height: 1.3;
-      background: var(--warn-bg);
-      border: 1px solid #fedf89;
-      color: #854a0e;
+    .stat strong {
+      font-size: 21px;
     }
 
-    .ok-box {
-      background: var(--ok-bg);
-      color: var(--ok);
-      border-color: #abefc6;
-    }
-
-    .table-wrap {
-      overflow-y: auto;
-      overflow-x: hidden;
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      flex: 1 1 auto;
-      height: auto;
-      min-height: 0;
-      background: white;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      table-layout: fixed;
-      font-size: 10px;
-    }
-
-    th {
-      position: sticky;
-      top: 0;
-      z-index: 2;
-      background: #f8fafc;
-      color: #334155;
-      text-align: left;
-      font-size: 9px;
-      text-transform: uppercase;
-      letter-spacing: .025em;
-      border-bottom: 1px solid var(--line);
-      padding: 5px 3px;
-      white-space: normal;
-      overflow-wrap: anywhere;
-    }
-
-    td {
-      border-bottom: 1px solid #eef2f7;
-      vertical-align: top;
-      padding: 5px 3px;
-      white-space: normal;
-      overflow-wrap: anywhere;
-      word-break: break-word;
-    }
-
-    .sortable-th {
-      width: 100%;
-      display: inline-flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 4px;
-      border: 0;
-      border-radius: 6px;
-      padding: 0;
-      background: transparent;
-      color: inherit;
-      font: inherit;
+    .message {
+      padding: 10px 11px;
+      border-radius: 14px;
+      background: var(--success-bg);
+      border: 1px solid var(--success-border);
+      color: var(--success-text);
       font-weight: 800;
-      text-align: left;
-      text-transform: inherit;
-      letter-spacing: inherit;
-      cursor: pointer;
-    }
-
-    .sortable-th:hover,
-    .sortable-th:focus {
-      background: #eef2ff;
-      color: #1e3a8a;
-      outline: none;
-      box-shadow: none;
-    }
-
-    .sort-icon {
-      flex: 0 0 auto;
-      font-size: 9px;
-      color: var(--muted);
-      line-height: 1;
-    }
-
-    col.col-row { width: 4.5%; }
-    col.col-appt { width: 8.5%; }
-    col.col-client { width: 11.5%; }
-    col.col-team { width: 12%; }
-    col.col-status { width: 8.5%; }
-    col.col-date { width: 9%; }
-    col.col-category { width: 10.5%; }
-    col.col-notes { width: 18.5%; }
-    col.col-issues { width: 12.5%; }
-    col.col-count { width: 4.5%; }
-
-    tr.issue-row:hover { background: #f8fbff; }
-
-    .issues {
-      color: var(--danger);
-      font-weight: 700;
       line-height: 1.35;
-      white-space: pre-line;
+      font-size: 13px;
     }
 
-    .notes {
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
+    .small-note {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.35;
     }
 
-    .pill {
-      display: inline-flex;
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(5, 10, 20, 0.55);
+      display: none;
       align-items: center;
-      padding: 3px 8px;
-      border-radius: 999px;
-      font-size: 11px;
-      font-weight: 800;
-      background: var(--danger-bg);
-      color: var(--danger);
-      border: 1px solid #fecdca;
+      justify-content: center;
+      z-index: 20;
+      padding: 20px;
+      overflow: hidden;
     }
 
-    .empty {
-      padding: 34px;
-      text-align: center;
-      color: var(--muted);
-    }
-
-    .hidden { display: none !important; }
-
-    .small {
-      font-size: 11px;
-      color: var(--muted);
-      line-height: 1.3;
-      margin: 0;
-    }
-
-    .filter-summary {
+    .overlay.show {
       display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      align-items: center;
-      justify-content: flex-end;
-      min-height: 40px;
-      margin-bottom: 0;
-      padding: 7px 9px;
-      font-size: 10px;
-      color: var(--muted);
-      border: 1px solid var(--line);
-      border-radius: 12px;
-      background: #fbfdff;
-      text-align: right;
     }
 
-    .filter-chip {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      border: 1px solid var(--line);
-      background: #f8fafc;
-      color: #334155;
-      border-radius: 999px;
-      padding: 4px 8px;
+    .winner-modal {
+      position: relative;
+      width: min(560px, 92vw);
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
+      padding: 28px 22px 20px;
+      text-align: center;
+      z-index: 2;
+    }
+
+    .winner-emoji {
+      font-size: 52px;
+      margin-bottom: 8px;
+    }
+
+    .winner-title {
+      margin: 0;
+      font-size: clamp(24px, 4vw, 40px);
+      font-weight: 900;
+    }
+
+    .winner-subtitle {
+      margin: 10px 0 14px;
+      color: var(--muted);
+      font-size: 16px;
       font-weight: 700;
     }
 
-    @media (max-width: 1050px) {
-      .grid { grid-template-columns: 1fr; }
-      .results-top { grid-template-columns: 1fr; }
-      .filter-summary { justify-content: flex-start; text-align: left; }
-      .filters, .date-row, .summary { grid-template-columns: repeat(2, 1fr); }
+    .winner-score {
+      display: inline-block;
+      padding: 12px 18px;
+      border-radius: 16px;
+      background: var(--panel-soft);
+      border: 1px solid var(--border);
+      font-size: 18px;
+      font-weight: 900;
+      margin-bottom: 18px;
     }
 
-    @media (max-width: 650px) {
-      .app { padding: 14px; }
-      .filters, .date-row, .summary { grid-template-columns: 1fr; }
-      .hero { padding: 20px; border-radius: 18px; }
+    .winner-actions {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .winner-actions button {
+      min-width: 150px;
+    }
+
+    .celebration {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 1;
+    }
+
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 18px;
+      top: -30px;
+      border-radius: 2px;
+      opacity: 0.95;
+      animation: confettiFall linear forwards;
+    }
+
+    @keyframes confettiFall {
+      0% {
+        transform: translateY(-40px) rotate(0deg);
+        opacity: 1;
+      }
+      100% {
+        transform: translateY(110vh) rotate(720deg);
+        opacity: 0.85;
+      }
+    }
+
+    @media (max-width: 980px) {
+      body {
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .app {
+        height: 100vh;
+        grid-template-columns: 1fr;
+        grid-template-rows: minmax(320px, 50vh) minmax(0, 1fr);
+        overflow: hidden;
+      }
+
+      .game-area {
+        min-height: 0;
+        grid-template-rows: auto auto minmax(0, 1fr);
+      }
+
+      .side-panel {
+        min-height: 0;
+        max-height: 100%;
+        overflow-y: auto;
+        overflow-x: hidden;
+      }
+
+      .top-bar {
+        grid-template-columns: 1fr;
+      }
+
+      h1,
+      .turn-pill {
+        grid-column: 1;
+        justify-self: center;
+      }
+
+      h1 {
+        font-size: 25px;
+      }
+
+      .turn-pill {
+        width: 100%;
+        min-width: 0;
+        font-size: 18px;
+        min-height: 56px;
+      }
+
+      .scores-top {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .score-card {
+        padding: 10px 12px;
+        font-size: 16px;
+      }
+
+      .score-card .score-value {
+        font-size: 24px;
+      }
+
+      #board {
+        width: min(94vw, 100%);
+        height: min(94vw, 100%);
+      }
+    }
+
+    @media (max-width: 560px) {
+      .app {
+        padding: 6px;
+        gap: 6px;
+        grid-template-rows: minmax(300px, 46vh) minmax(0, 1fr);
+      }
+
+      .game-area,
+      .side-panel {
+        border-radius: 18px;
+      }
+
+      .game-area,
+      .side-panel {
+        padding: 12px;
+      }
+
+      .compact-row,
+      .stats-grid,
+      .scores-top {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .score-card {
+        font-size: 14px;
+      }
+
+      .score-card .score-value {
+        font-size: 22px;
+      }
     }
   </style>
 </head>
 <body>
   <main class="app">
-    <section class="hero">
-      <h1>DSR Appointment Data Audit</h1>
-      <p>Upload appointment Excel data, audit appointment notes for curly-bracket and square-bracket formatting issues, filter the results, then copy or export only rows with issues.</p>
-    </section>
-
-    <section class="grid">
-      <aside class="card stack">
-        <div>
-          <label for="fileInput">Upload Excel / CSV</label>
-          <input id="fileInput" type="file" accept=".xlsx,.xls,.csv" />
-          <div id="loadStatus" class="status-line">No file loaded.</div>
+    <section class="game-area">
+      <div class="top-bar">
+        <h1>Dots & Boxes</h1>
+        <div class="turn-pill" aria-live="polite">
+          <span class="turn-dot" id="turnDot"></span>
+          <span id="turnText">TURN: Player 1</span>
         </div>
+      </div>
 
-        <div class="actions">
-          <button id="auditBtn" disabled>Run Audit</button>
-          <button id="resetBtn" class="btn-danger" disabled>Reset</button>
-        </div>
-
-        <div class="notice">
-          Spaces before or after IDs/values are ignored during validation. The core pattern must still remain valid.
-        </div>
-
-        <div>
-          <label>Rules checked</label>
-          <ul class="rules-list">
-            <li>Curly brackets must be balanced and formatted as <strong>{amount}</strong> or <strong>{sequence_amount}</strong>.</li>
-            <li>Single curly-bracket amounts must be positive numbers.</li>
-            <li>Square brackets must be balanced and formatted as <strong>[employee:value]</strong>.</li>
-            <li>Square-bracket items must use commas, not semicolons, pipes, or dashes.</li>
-            <li>Employee IDs in square brackets must not contain underscores.</li>
-          </ul>
-        </div>
-
-        <div>
-          <label>Filters</label>
-          <div class="filters">
-            <input id="monthFilter" type="month" />
-            <div class="date-row">
-              <input id="fromDate" type="date" aria-label="From date" />
-              <input id="toDate" type="date" aria-label="To date" />
-            </div>
-            <select id="teamFilter"><option value="">All Team Members</option></select>
-            <select id="clientFilter"><option value="">All Clients</option></select>
-            <select id="statusFilter"><option value="">All Statuses</option></select>
-            <select id="categoryFilter"><option value="">All Categories</option></select>
-            <input id="searchBox" class="search-input" type="search" placeholder="Search visible fields" />
+      <section class="scores-top" aria-label="Scores">
+        <div class="score-card">
+          <div class="left">
+            <span class="color-chip" id="p1Chip"></span>
+            <span id="p1ScoreName">Player 1</span>
           </div>
+          <span class="score-value" id="p1Score">0</span>
         </div>
 
-        <div class="actions">
-          <button id="clearFiltersBtn" class="btn-secondary" disabled>Clear Filters</button>
-          <button id="copyBtn" class="btn-secondary" disabled>Copy Visible Rows</button>
-          <button id="exportBtn" class="btn-secondary" disabled>Export Visible Rows</button>
-        </div>
-      </aside>
-
-      <section class="card">
-        <div class="results-top">
-          <div class="summary">
-            <div class="metric"><b id="totalRows">0</b><span>Total Rows</span></div>
-            <div class="metric"><b id="issueRows">0</b><span>Issue Rows</span></div>
-            <div class="metric"><b id="visibleRows">0</b><span>Visible Rows</span></div>
-            <div class="metric"><b id="totalIssues">0</b><span>Total Issues</span></div>
+        <div class="score-card">
+          <div class="left">
+            <span class="color-chip" id="p2Chip"></span>
+            <span id="p2ScoreName">Player 2</span>
           </div>
-          <div id="filterSummary" class="filter-summary">Selected filters: none</div>
-        </div>
-
-        <div id="resultMessage" class="notice ok-box hidden">No auditing issues found for the current selection.</div>
-
-        <div class="table-wrap">
-          <table id="resultTable">
-            <colgroup>
-              <col class="col-row" />
-              <col class="col-appt" />
-              <col class="col-client" />
-              <col class="col-team" />
-              <col class="col-status" />
-              <col class="col-date" />
-              <col class="col-category" />
-              <col class="col-notes" />
-              <col class="col-issues" />
-              <col class="col-count" />
-            </colgroup>
-            <thead>
-              <tr>
-                <th><button class="sortable-th" type="button" data-sort="rowNumber">Row <span class="sort-icon" data-sort-icon="rowNumber">↕</span></button></th>
-                <th><button class="sortable-th" type="button" data-sort="apptId">Appt. Id <span class="sort-icon" data-sort-icon="apptId">↕</span></button></th>
-                <th><button class="sortable-th" type="button" data-sort="client">Client <span class="sort-icon" data-sort-icon="client">↕</span></button></th>
-                <th><button class="sortable-th" type="button" data-sort="team">Team Member <span class="sort-icon" data-sort-icon="team">↕</span></button></th>
-                <th><button class="sortable-th" type="button" data-sort="status">Status <span class="sort-icon" data-sort-icon="status">↕</span></button></th>
-                <th><button class="sortable-th" type="button" data-sort="scheduledDate">Scheduled Date <span class="sort-icon" data-sort-icon="scheduledDate">↕</span></button></th>
-                <th><button class="sortable-th" type="button" data-sort="category">Category <span class="sort-icon" data-sort-icon="category">↕</span></button></th>
-                <th><button class="sortable-th" type="button" data-sort="notes">Appointment Notes <span class="sort-icon" data-sort-icon="notes">↕</span></button></th>
-                <th><button class="sortable-th" type="button" data-sort="issues">Issues <span class="sort-icon" data-sort-icon="issues">↕</span></button></th>
-                <th><button class="sortable-th" type="button" data-sort="issueCount">Count <span class="sort-icon" data-sort-icon="issueCount">↕</span></button></th>
-              </tr>
-            </thead>
-            <tbody id="tableBody">
-              <tr><td colspan="10" class="empty">Upload an Excel file, then run the audit.</td></tr>
-            </tbody>
-          </table>
+          <span class="score-value" id="p2Score">0</span>
         </div>
       </section>
+
+      <div class="board-wrap">
+        <canvas id="board" width="900" height="900" aria-label="Dots and Boxes game board"></canvas>
+      </div>
+
+      <div class="overlay" id="winnerOverlay">
+        <div class="celebration" id="celebration"></div>
+        <div class="winner-modal">
+          <div class="winner-emoji" id="winnerEmoji">🎉</div>
+          <h2 class="winner-title" id="winnerTitle">Winner!</h2>
+          <p class="winner-subtitle" id="winnerSubtitle">Great game.</p>
+          <div class="winner-score" id="winnerScoreText">Player 1 0 - 0 Player 2</div>
+          <div class="winner-actions">
+            <button id="playAgainBtn">Play Again</button>
+            <button id="closeWinnerBtn" class="secondary">Close</button>
+          </div>
+        </div>
+      </div>
     </section>
+
+    <aside class="side-panel">
+      <section class="card">
+        <h2>Game Setup</h2>
+        <div class="controls">
+          <div class="compact-row">
+            <label>
+              Box Size
+              <select id="sizeSelect">
+                <option value="3">3 × 3</option>
+                <option value="4">4 × 4</option>
+                <option value="5">5 × 5</option>
+                <option value="6">6 × 6</option>
+                <option value="8" selected>8 × 8</option>
+                <option value="10">10 × 10</option>
+                <option value="12">12 × 12</option>
+                <option value="14">14 × 14</option>
+                <option value="16">16 × 16</option>
+                <option value="18">18 × 18</option>
+                <option value="20">20 × 20</option>
+                <option value="24">24 × 24</option>
+                <option value="30">30 × 30</option>
+              </select>
+            </label>
+
+            <label>
+              Theme
+              <select id="themeSelect">
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+              </select>
+            </label>
+          </div>
+
+          <label>
+            Player 1 Name
+            <input id="p1Name" value="Player 1" maxlength="18" />
+          </label>
+
+          <label>
+            Player 2 Name
+            <input id="p2Name" value="Player 2" maxlength="18" />
+          </label>
+
+          <label>
+            Opponent
+            <select id="modeSelect">
+              <option value="human" selected>2 Players</option>
+              <option value="pc">Play with PC</option>
+            </select>
+          </label>
+
+          <div class="compact-row">
+            <label>
+              Player 1 Color
+              <input id="p1Color" type="color" value="#2563eb" />
+            </label>
+            <label>
+              Player 2 Color
+              <input id="p2Color" type="color" value="#f97316" />
+            </label>
+          </div>
+
+          <label>
+            PC Color
+            <input id="pcColor" type="color" value="#7c3aed" />
+          </label>
+
+          <button id="newGameBtn">New Game</button>
+          <button id="resetStatsBtn" class="secondary">Reset Statistics</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Statistics</h2>
+        <div class="stats-grid">
+          <div class="stat"><span>Games</span><strong id="gamesPlayed">0</strong></div>
+          <div class="stat"><span>Drawn</span><strong id="drawnLines">0</strong></div>
+          <div class="stat"><span>Remaining</span><strong id="remainingLines">0</strong></div>
+          <div class="stat"><span>Boxes Left</span><strong id="boxesLeft">0</strong></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Result / Status</h2>
+        <div class="message" id="statusMessage">Start drawing lines between dots.</div>
+        <p class="small-note">Move history removed. Winner popup appears at the end with celebration.</p>
+      </section>
+    </aside>
   </main>
 
   <script>
-    const state = {
-      rawRows: [],
-      columns: {},
-      issueRows: [],
-      visibleRows: [],
-      fileName: "",
-      sortKey: "rowNumber",
-      sortDirection: "asc"
+    const canvas = document.getElementById('board');
+    const ctx = canvas.getContext('2d');
+
+    const els = {
+      sizeSelect: document.getElementById('sizeSelect'),
+      themeSelect: document.getElementById('themeSelect'),
+      p1Color: document.getElementById('p1Color'),
+      p2Color: document.getElementById('p2Color'),
+      pcColor: document.getElementById('pcColor'),
+      p1Name: document.getElementById('p1Name'),
+      p2Name: document.getElementById('p2Name'),
+      modeSelect: document.getElementById('modeSelect'),
+      newGameBtn: document.getElementById('newGameBtn'),
+      resetStatsBtn: document.getElementById('resetStatsBtn'),
+      turnDot: document.getElementById('turnDot'),
+      turnText: document.getElementById('turnText'),
+      p1Chip: document.getElementById('p1Chip'),
+      p2Chip: document.getElementById('p2Chip'),
+      p1ScoreName: document.getElementById('p1ScoreName'),
+      p2ScoreName: document.getElementById('p2ScoreName'),
+      p1Score: document.getElementById('p1Score'),
+      p2Score: document.getElementById('p2Score'),
+      gamesPlayed: document.getElementById('gamesPlayed'),
+      drawnLines: document.getElementById('drawnLines'),
+      remainingLines: document.getElementById('remainingLines'),
+      boxesLeft: document.getElementById('boxesLeft'),
+      statusMessage: document.getElementById('statusMessage'),
+      winnerOverlay: document.getElementById('winnerOverlay'),
+      winnerTitle: document.getElementById('winnerTitle'),
+      winnerSubtitle: document.getElementById('winnerSubtitle'),
+      winnerScoreText: document.getElementById('winnerScoreText'),
+      winnerEmoji: document.getElementById('winnerEmoji'),
+      celebration: document.getElementById('celebration'),
+      playAgainBtn: document.getElementById('playAgainBtn'),
+      closeWinnerBtn: document.getElementById('closeWinnerBtn')
     };
 
-    const aliases = {
-      apptId: ["APPT_ID", "APPT. ID", "APPT ID", "APPT. ID", "APPT ID", "APPT. ID", "APPT. ID", "Appt. Id"],
-      client: ["CLIENT", "Client"],
-      team: ["TEAM_MEMBER", "TEAM MEMBER", "Team Member", "TEAMMEMBER"],
-      status: ["STATUS", "Status"],
-      scheduledDate: ["SCHEDULED_DATE", "SCHEDULED DATE", "Scheduled Date"],
-      category: ["CATEGORY", "Category"],
-      notes: ["APPOINTMENT_NOTES", "APPOINTMENT NOTES", "Appointment Notes"]
+    const colors = {
+      p1: localStorage.getItem('dotsBoxesP1Color') || '#2563eb',
+      p2: localStorage.getItem('dotsBoxesP2Color') || '#f97316',
+      pc: localStorage.getItem('dotsBoxesPCColor') || '#7c3aed',
+      hoverLight: '#111827',
+      hoverDark: '#f8fafc',
+      dotLight: '#172033',
+      dotDark: '#e5e7eb',
+      gridLight: '#dce2ec',
+      gridDark: '#2d3748'
     };
 
-    const el = id => document.getElementById(id);
-    const fileInput = el("fileInput");
-    const loadStatus = el("loadStatus");
-    const auditBtn = el("auditBtn");
-    const resetBtn = el("resetBtn");
-    const copyBtn = el("copyBtn");
-    const exportBtn = el("exportBtn");
-    const clearFiltersBtn = el("clearFiltersBtn");
-    const tableBody = el("tableBody");
-    const resultMessage = el("resultMessage");
+    let state;
+    let stats = JSON.parse(
+      localStorage.getItem('dotsBoxesStats') ||
+      '{"gamesPlayed":0,"p1Wins":0,"p2Wins":0,"draws":0}'
+    );
 
-    const filterIds = ["monthFilter", "fromDate", "toDate", "teamFilter", "clientFilter", "statusFilter", "categoryFilter", "searchBox"];
-    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-    runValidationTests(); 
-
-    function addListener(id, eventName, handler) {
-      const node = el(id);
-      if (!node) {
-        console.warn("Missing element #" + id + ". Listener was not attached.");
-        return;
-      }
-      node.addEventListener(eventName, handler);
+    function isDark() {
+      return document.body.classList.contains('dark');
     }
 
-    addListener("fileInput", "change", handleFile);
-    addListener("auditBtn", "click", runAudit);
-    addListener("resetBtn", "click", resetApp);
-    addListener("copyBtn", "click", copyVisibleRows);
-    addListener("exportBtn", "click", exportVisibleRows);
-    addListener("clearFiltersBtn", "click", clearFilters);
-    filterIds.forEach(id => addListener(id, "input", handleFilterInput));
-    filterIds.forEach(id => addListener(id, "change", handleFilterInput));
-    document.querySelectorAll("[data-sort]").forEach(button => {
-      button.addEventListener("click", () => handleSort(button.dataset.sort));
+    function getNames() {
+      const player1 = els.p1Name.value.trim() || 'Player 1';
+      const isPc = els.modeSelect.value === 'pc';
+      const player2 = isPc ? 'PC' : (els.p2Name.value.trim() || 'Player 2');
+      return [player1, player2];
+    }
+
+    function getInitial(name) {
+      const clean = String(name || '?').trim();
+      return (clean[0] || '?').toUpperCase();
+    }
+
+    function newGame(incrementGames = true) {
+      const boxes = Number(els.sizeSelect.value);
+      const totalLines = boxes * (boxes + 1) * 2;
+
+      state = {
+        boxes,
+        dots: boxes + 1,
+        hLines: Array.from({ length: boxes + 1 }, () => Array(boxes).fill(null)),
+        vLines: Array.from({ length: boxes }, () => Array(boxes + 1).fill(null)),
+        owners: Array.from({ length: boxes }, () => Array(boxes).fill(null)),
+        current: 0,
+        scores: [0, 0],
+        drawnLines: 0,
+        totalLines,
+        hover: null,
+        gameOver: false,
+        names: getNames(),
+        mode: els.modeSelect.value
+      };
+
+      if (state.mode === 'pc') {
+        els.p2Name.value = 'PC';
+      }
+
+      if (incrementGames) {
+        stats.gamesPlayed += 1;
+        saveStats();
+      }
+
+      hideWinnerOverlay();
+      setStatus('Start drawing lines between dots.');
+      resizeCanvasForDisplay();
+      updateUI();
+      draw();
+    }
+
+    function saveStats() {
+      localStorage.setItem('dotsBoxesStats', JSON.stringify(stats));
+    }
+
+    function resetStats() {
+      stats = { gamesPlayed: 0, p1Wins: 0, p2Wins: 0, draws: 0 };
+      saveStats();
+      updateUI();
+      setStatus('Statistics reset. Current game continues.');
+    }
+
+    function setTheme(theme) {
+      document.body.classList.toggle('dark', theme === 'dark');
+      localStorage.setItem('dotsBoxesTheme', theme);
+      resizeCanvasForDisplay();
+      draw();
+    }
+
+    function applyPlayerColors() {
+      colors.p1 = els.p1Color.value;
+      colors.p2 = els.p2Color.value;
+      colors.pc = els.pcColor.value;
+
+      localStorage.setItem('dotsBoxesP1Color', colors.p1);
+      localStorage.setItem('dotsBoxesP2Color', colors.p2);
+      localStorage.setItem('dotsBoxesPCColor', colors.pc);
+
+      updateUI();
+      draw();
+    }
+
+    function resizeCanvasForDisplay() {
+      const rect = canvas.getBoundingClientRect();
+      const ratio = window.devicePixelRatio || 1;
+      canvas.width = Math.max(1, Math.round(rect.width * ratio));
+      canvas.height = Math.max(1, Math.round(rect.height * ratio));
+      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+    }
+
+    function boardMetrics() {
+      const rect = canvas.getBoundingClientRect();
+      const size = Math.min(rect.width, rect.height);
+      const padding = Math.max(16, Math.min(38, size * 0.06));
+      const usable = size - padding * 2;
+
+      return {
+        width: rect.width,
+        height: rect.height,
+        size,
+        padding,
+        step: usable / state.boxes,
+        x0: (rect.width - usable) / 2,
+        y0: (rect.height - usable) / 2,
+        usable
+      };
+    }
+
+    function lineOwner(line) {
+      if (!line) return null;
+      return line.player === 0 ? colors.p1 : (state.mode === 'pc' ? colors.pc : colors.p2);
+    }
+
+    function draw() {
+      if (!state) return;
+      const m = boardMetrics();
+      ctx.clearRect(0, 0, m.width, m.height);
+      drawBoxes(m);
+      drawLines(m);
+      drawHover(m);
+      drawDots(m);
+    }
+
+    function drawBoxes(m) {
+      for (let r = 0; r < state.boxes; r++) {
+        for (let c = 0; c < state.boxes; c++) {
+          const owner = state.owners[r][c];
+          if (owner === null) continue;
+
+          ctx.fillStyle =
+            owner === 0
+              ? hexToRgba(colors.p1, 0.22)
+              : hexToRgba(state.mode === 'pc' ? colors.pc : colors.p2, 0.22);
+
+          ctx.fillRect(
+            m.x0 + c * m.step + 2,
+            m.y0 + r * m.step + 2,
+            Math.max(1, m.step - 4),
+            Math.max(1, m.step - 4)
+          );
+
+          if (m.step > 20) {
+            ctx.fillStyle = owner === 0 ? colors.p1 : (state.mode === 'pc' ? colors.pc : colors.p2);
+            ctx.font = `900 ${Math.max(11, m.step * 0.36)}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(
+              getInitial(state.names[owner]),
+              m.x0 + (c + 0.5) * m.step,
+              m.y0 + (r + 0.5) * m.step
+            );
+          }
+        }
+      }
+    }
+
+    function drawLines(m) {
+      ctx.lineCap = 'round';
+      ctx.lineWidth = Math.max(2, Math.min(7, m.step * 0.12));
+
+      for (let r = 0; r <= state.boxes; r++) {
+        for (let c = 0; c < state.boxes; c++) {
+          const ownerColor = lineOwner(state.hLines[r][c]);
+          ctx.strokeStyle = ownerColor || (isDark() ? colors.gridDark : colors.gridLight);
+          ctx.globalAlpha = ownerColor ? 1 : (isDark() ? 0.82 : 1);
+          ctx.beginPath();
+          ctx.moveTo(m.x0 + c * m.step, m.y0 + r * m.step);
+          ctx.lineTo(m.x0 + (c + 1) * m.step, m.y0 + r * m.step);
+          ctx.stroke();
+        }
+      }
+
+      for (let r = 0; r < state.boxes; r++) {
+        for (let c = 0; c <= state.boxes; c++) {
+          const ownerColor = lineOwner(state.vLines[r][c]);
+          ctx.strokeStyle = ownerColor || (isDark() ? colors.gridDark : colors.gridLight);
+          ctx.globalAlpha = ownerColor ? 1 : (isDark() ? 0.82 : 1);
+          ctx.beginPath();
+          ctx.moveTo(m.x0 + c * m.step, m.y0 + r * m.step);
+          ctx.lineTo(m.x0 + c * m.step, m.y0 + (r + 1) * m.step);
+          ctx.stroke();
+        }
+      }
+
+      ctx.globalAlpha = 1;
+    }
+
+    function drawHover(m) {
+      if (!state.hover || state.gameOver || isPcTurn()) return;
+
+      ctx.strokeStyle = isDark() ? colors.hoverDark : colors.hoverLight;
+      ctx.lineWidth = Math.max(4, Math.min(9, m.step * 0.16));
+      ctx.globalAlpha = 0.65;
+      ctx.lineCap = 'round';
+
+      const { type, r, c } = state.hover;
+      ctx.beginPath();
+
+      if (type === 'h') {
+        ctx.moveTo(m.x0 + c * m.step, m.y0 + r * m.step);
+        ctx.lineTo(m.x0 + (c + 1) * m.step, m.y0 + r * m.step);
+      } else {
+        ctx.moveTo(m.x0 + c * m.step, m.y0 + r * m.step);
+        ctx.lineTo(m.x0 + c * m.step, m.y0 + (r + 1) * m.step);
+      }
+
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
+    function drawDots(m) {
+      const radius = Math.max(2.5, Math.min(7, m.step * 0.12));
+
+      for (let r = 0; r <= state.boxes; r++) {
+        for (let c = 0; c <= state.boxes; c++) {
+          ctx.fillStyle = isDark() ? colors.dotDark : colors.dotLight;
+          ctx.beginPath();
+          ctx.arc(m.x0 + c * m.step, m.y0 + r * m.step, radius, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+
+    function nearestLine(x, y) {
+      const m = boardMetrics();
+      let best = null;
+      const hit = Math.max(8, Math.min(18, m.step * 0.42));
+
+      for (let r = 0; r <= state.boxes; r++) {
+        for (let c = 0; c < state.boxes; c++) {
+          if (state.hLines[r][c]) continue;
+          const x1 = m.x0 + c * m.step;
+          const x2 = m.x0 + (c + 1) * m.step;
+          const yy = m.y0 + r * m.step;
+
+          if (x >= x1 - hit && x <= x2 + hit) {
+            const d = Math.abs(y - yy);
+            if (d <= hit && (!best || d < best.d)) best = { type: 'h', r, c, d };
+          }
+        }
+      }
+
+      for (let r = 0; r < state.boxes; r++) {
+        for (let c = 0; c <= state.boxes; c++) {
+          if (state.vLines[r][c]) continue;
+          const xx = m.x0 + c * m.step;
+          const y1 = m.y0 + r * m.step;
+          const y2 = m.y0 + (r + 1) * m.step;
+
+          if (y >= y1 - hit && y <= y2 + hit) {
+            const d = Math.abs(x - xx);
+            if (d <= hit && (!best || d < best.d)) best = { type: 'v', r, c, d };
+          }
+        }
+      }
+
+      return best ? { type: best.type, r: best.r, c: best.c } : null;
+    }
+
+    function setLine(move, player) {
+      if (move.type === 'h') state.hLines[move.r][move.c] = { player };
+      else state.vLines[move.r][move.c] = { player };
+      state.drawnLines += 1;
+    }
+
+    function checkCompletedBoxes(move, player) {
+      const completed = [];
+      const candidates = [];
+
+      if (move.type === 'h') {
+        if (move.r > 0) candidates.push([move.r - 1, move.c]);
+        if (move.r < state.boxes) candidates.push([move.r, move.c]);
+      } else {
+        if (move.c > 0) candidates.push([move.r, move.c - 1]);
+        if (move.c < state.boxes) candidates.push([move.r, move.c]);
+      }
+
+      for (const [r, c] of candidates) {
+        if (state.owners[r][c] !== null) continue;
+        const closed =
+          state.hLines[r][c] &&
+          state.hLines[r + 1][c] &&
+          state.vLines[r][c] &&
+          state.vLines[r][c + 1];
+
+        if (closed) {
+          state.owners[r][c] = player;
+          state.scores[player] += 1;
+          completed.push({ r, c });
+        }
+      }
+
+      return completed;
+    }
+
+    function makeMove(move) {
+      if (!move || state.gameOver) return;
+
+      if (
+        (move.type === 'h' && state.hLines[move.r][move.c]) ||
+        (move.type === 'v' && state.vLines[move.r][move.c])
+      ) return;
+
+      const player = state.current;
+      setLine(move, player);
+
+      const completed = checkCompletedBoxes(move, player);
+      const name = state.names[player];
+
+      if (completed.length === 0) {
+        state.current = 1 - state.current;
+        setStatus(`${name} played. Turn switched.`);
+      } else {
+        setStatus(`${name} scored ${completed.length} box${completed.length > 1 ? 'es' : ''} and keeps the turn.`);
+      }
+
+      state.hover = null;
+      finishIfOver();
+      updateUI();
+      draw();
+
+      if (!state.gameOver && isPcTurn()) {
+        setTimeout(pcMove, 350);
+      }
+    }
+
+    function finishIfOver() {
+      if (state.drawnLines < state.totalLines) return;
+
+      state.gameOver = true;
+
+      const [p1, p2] = state.names;
+      let title, subtitle, emoji;
+
+      if (state.scores[0] > state.scores[1]) {
+        stats.p1Wins += 1;
+        title = `${p1} Wins!`;
+        subtitle = `Congratulations! ${p1} completed more boxes.`;
+        emoji = '🎆';
+      } else if (state.scores[1] > state.scores[0]) {
+        stats.p2Wins += 1;
+        title = `${p2} Wins!`;
+        subtitle = `Congratulations! ${p2} completed more boxes.`;
+        emoji = '🎉';
+      } else {
+        stats.draws += 1;
+        title = `It's a Draw!`;
+        subtitle = `Both players finished with the same score.`;
+        emoji = '🤝';
+      }
+
+      saveStats();
+      setStatus(title);
+      showWinnerOverlay(title, subtitle, `${p1} ${state.scores[0]} - ${state.scores[1]} ${p2}`, emoji);
+    }
+
+    function showWinnerOverlay(title, subtitle, scoreText, emoji) {
+      els.winnerTitle.textContent = title;
+      els.winnerSubtitle.textContent = subtitle;
+      els.winnerScoreText.textContent = scoreText;
+      els.winnerEmoji.textContent = emoji;
+      els.winnerOverlay.classList.add('show');
+      launchCelebration();
+    }
+
+    function hideWinnerOverlay() {
+      els.winnerOverlay.classList.remove('show');
+      els.celebration.innerHTML = '';
+    }
+
+    function launchCelebration() {
+      els.celebration.innerHTML = '';
+      const palette = [colors.p1, state.mode === 'pc' ? colors.pc : colors.p2, '#facc15', '#22c55e', '#ec4899', '#38bdf8'];
+
+      for (let i = 0; i < 60; i++) {
+        const piece = document.createElement('span');
+        piece.className = 'confetti';
+        piece.style.left = `${Math.random() * 100}%`;
+        piece.style.background = palette[i % palette.length];
+        piece.style.animationDuration = `${3 + Math.random() * 2.8}s`;
+        piece.style.animationDelay = `${Math.random() * 0.5}s`;
+        piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+        piece.style.opacity = `${0.75 + Math.random() * 0.25}`;
+        els.celebration.appendChild(piece);
+      }
+    }
+
+    function isPcTurn() {
+      return state && state.mode === 'pc' && state.current === 1 && !state.gameOver;
+    }
+
+    function availableMoves() {
+      const moves = [];
+      for (let r = 0; r <= state.boxes; r++) {
+        for (let c = 0; c < state.boxes; c++) {
+          if (!state.hLines[r][c]) moves.push({ type: 'h', r, c });
+        }
+      }
+      for (let r = 0; r < state.boxes; r++) {
+        for (let c = 0; c <= state.boxes; c++) {
+          if (!state.vLines[r][c]) moves.push({ type: 'v', r, c });
+        }
+      }
+      return moves;
+    }
+
+    function wouldComplete(move) {
+      const candidates = [];
+
+      if (move.type === 'h') {
+        if (move.r > 0) candidates.push([move.r - 1, move.c]);
+        if (move.r < state.boxes) candidates.push([move.r, move.c]);
+      } else {
+        if (move.c > 0) candidates.push([move.r, move.c - 1]);
+        if (move.c < state.boxes) candidates.push([move.r, move.c]);
+      }
+
+      let count = 0;
+
+      for (const [r, c] of candidates) {
+        if (state.owners[r][c] !== null) continue;
+
+        const top = state.hLines[r][c] || (move.type === 'h' && move.r === r && move.c === c);
+        const bottom = state.hLines[r + 1][c] || (move.type === 'h' && move.r === r + 1 && move.c === c);
+        const left = state.vLines[r][c] || (move.type === 'v' && move.r === r && move.c === c);
+        const right = state.vLines[r][c + 1] || (move.type === 'v' && move.r === r && move.c === c + 1);
+
+        if (top && bottom && left && right) count += 1;
+      }
+
+      return count;
+    }
+
+    function thirdSideRisk(move) {
+      const candidates = [];
+
+      if (move.type === 'h') {
+        if (move.r > 0) candidates.push([move.r - 1, move.c]);
+        if (move.r < state.boxes) candidates.push([move.r, move.c]);
+      } else {
+        if (move.c > 0) candidates.push([move.r, move.c - 1]);
+        if (move.c < state.boxes) candidates.push([move.r, move.c]);
+      }
+
+      let risk = 0;
+
+      for (const [r, c] of candidates) {
+        if (state.owners[r][c] !== null) continue;
+
+        const sides = [
+          Boolean(state.hLines[r][c]) || (move.type === 'h' && move.r === r && move.c === c),
+          Boolean(state.hLines[r + 1][c]) || (move.type === 'h' && move.r === r + 1 && move.c === c),
+          Boolean(state.vLines[r][c]) || (move.type === 'v' && move.r === r && move.c === c),
+          Boolean(state.vLines[r][c + 1]) || (move.type === 'v' && move.r === r && move.c === c + 1)
+        ].filter(Boolean).length;
+
+        if (sides === 3) risk += 1;
+      }
+
+      return risk;
+    }
+
+    function pcMove() {
+      if (!isPcTurn()) return;
+
+      const moves = availableMoves();
+      if (!moves.length) return;
+
+      const scoring = moves
+        .map(move => ({ move, score: wouldComplete(move) }))
+        .filter(item => item.score > 0)
+        .sort((a, b) => b.score - a.score);
+
+      let chosen;
+      if (scoring.length) {
+        chosen = scoring[0].move;
+      } else {
+        const safe = moves.filter(move => thirdSideRisk(move) === 0);
+        const pool = safe.length ? safe : moves;
+        chosen = pool[Math.floor(Math.random() * pool.length)];
+      }
+
+      makeMove(chosen);
+    }
+
+    function updateUI() {
+      if (!state) return;
+
+      const names = getNames();
+      if (!state.gameOver) state.names = names;
+
+      els.p1ScoreName.textContent = state.names[0];
+      els.p2ScoreName.textContent = state.names[1];
+      els.p1Score.textContent = state.scores[0];
+      els.p2Score.textContent = state.scores[1];
+
+      els.p1Chip.style.background = colors.p1;
+      els.p2Chip.style.background = state.mode === 'pc' ? colors.pc : colors.p2;
+
+      const currentColor = state.current === 0 ? colors.p1 : (state.mode === 'pc' ? colors.pc : colors.p2);
+      els.turnDot.style.background = currentColor;
+      els.turnDot.style.boxShadow = `0 0 0 7px ${hexToRgba(currentColor, 0.18)}`;
+      els.turnText.textContent = state.gameOver ? 'GAME OVER' : `TURN: ${state.names[state.current]}`;
+
+      els.gamesPlayed.textContent = stats.gamesPlayed;
+      els.drawnLines.textContent = state.drawnLines;
+      els.remainingLines.textContent = state.totalLines - state.drawnLines;
+      els.boxesLeft.textContent = state.boxes * state.boxes - state.scores[0] - state.scores[1];
+    }
+
+    function hexToRgba(hex, alpha) {
+      const value = hex.replace('#', '');
+      const r = parseInt(value.slice(0, 2), 16);
+      const g = parseInt(value.slice(2, 4), 16);
+      const b = parseInt(value.slice(4, 6), 16);
+      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    }
+
+    function setStatus(text) {
+      els.statusMessage.textContent = text;
+    }
+
+    function pointerPosition(event) {
+      const rect = canvas.getBoundingClientRect();
+      const touch = event.touches ? event.touches[0] : event;
+      return {
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top
+      };
+    }
+
+    canvas.addEventListener('mousemove', event => {
+      if (!state || state.gameOver || isPcTurn()) return;
+      const { x, y } = pointerPosition(event);
+      state.hover = nearestLine(x, y);
+      draw();
     });
 
-    function handleFilterInput(event) {
-      if (event && event.target && event.target.id === "monthFilter") {
-        const value = event.target.value;
-        if (value) {
-          const parts = value.split("-");
-          const year = Number(parts[0]);
-          const monthNum = Number(parts[1]);
-          const start = new Date(year, monthNum - 1, 1);
-          const end = new Date(year, monthNum, 0);
-          if (el("fromDate")) el("fromDate").value = dateToYMD(start);
-          if (el("toDate")) el("toDate").value = dateToYMD(end);
-        }
+    canvas.addEventListener('mouseleave', () => {
+      if (!state) return;
+      state.hover = null;
+      draw();
+    });
+
+    canvas.addEventListener('click', event => {
+      if (!state || isPcTurn()) return;
+      const { x, y } = pointerPosition(event);
+      makeMove(nearestLine(x, y));
+    });
+
+    canvas.addEventListener('touchstart', event => {
+      if (!state || isPcTurn()) return;
+      event.preventDefault();
+      const { x, y } = pointerPosition(event);
+      makeMove(nearestLine(x, y));
+    }, { passive: false });
+
+    els.newGameBtn.addEventListener('click', () => newGame(true));
+    els.resetStatsBtn.addEventListener('click', resetStats);
+    els.sizeSelect.addEventListener('change', () => newGame(true));
+    els.themeSelect.addEventListener('change', () => setTheme(els.themeSelect.value));
+
+    els.p1Color.addEventListener('input', applyPlayerColors);
+    els.p2Color.addEventListener('input', applyPlayerColors);
+    els.pcColor.addEventListener('input', applyPlayerColors);
+
+    els.modeSelect.addEventListener('change', () => {
+      if (els.modeSelect.value === 'pc') {
+        els.p2Name.value = 'PC';
+      } else if (els.p2Name.value.trim().toLowerCase() === 'pc') {
+        els.p2Name.value = 'Player 2';
       }
-      applyFilters();
-    }
-
-    function normalizeHeader(value) {
-      return String(value || "")
-        .trim()
-        .toUpperCase()
-        .replace(/[._-]+/g, " ")
-        .replace(/\s+/g, " ");
-    }
-
-    function detectColumns(headers) {
-      const normalized = headers.map(h => ({ original: h, normalized: normalizeHeader(h) }));
-      const result = {};
-      for (const [key, names] of Object.entries(aliases)) {
-        const wanted = names.map(normalizeHeader);
-        const hit = normalized.find(h => wanted.includes(h.normalized));
-        result[key] = hit ? hit.original : null;
-      }
-      return result;
-    }
-
-    function missingRequiredColumns(columns) {
-      return ["apptId", "client", "status", "scheduledDate", "notes"]
-        .filter(key => !columns[key]);
-    }
-
-    async function handleFile(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-      state.fileName = file.name;
-      loadStatus.textContent = `Loading ${file.name}...`;
-      try {
-        const data = await file.arrayBuffer();
-        const workbook = XLSX.read(data, { type: "array", cellDates: true });
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json(sheet, { defval: "", raw: false });
-        const headers = rows.length ? Object.keys(rows[0]) : [];
-        const columns = detectColumns(headers);
-        const missing = missingRequiredColumns(columns);
-
-        state.rawRows = rows.map((row, idx) => ({ ...row, __excelRow: idx + 2 }));
-        state.columns = columns;
-        state.issueRows = [];
-        state.visibleRows = [];
-
-        el("totalRows").textContent = state.rawRows.length.toLocaleString();
-        el("issueRows").textContent = "0";
-        el("visibleRows").textContent = "0";
-        el("totalIssues").textContent = "0";
-
-        if (missing.length) {
-          auditBtn.disabled = true;
-          loadStatus.textContent = `Missing required column(s): ${missing.join(", ")}. Detected headers: ${headers.join(", ")}`;
-          renderEmpty("Cannot audit until required columns are present.");
-          return;
-        }
-
-        auditBtn.disabled = false;
-        resetBtn.disabled = false;
-        loadStatus.textContent = `Loaded ${state.rawRows.length.toLocaleString()} rows. Columns detected successfully.`;
-        renderEmpty("File loaded. Click Run Audit to find issue rows.");
-      } catch (error) {
-        console.error(error);
-        loadStatus.textContent = `Could not read file: ${error.message}`;
-      }
-    }
-
-    function runAudit() {
-      const c = state.columns;
-      state.issueRows = state.rawRows
-        .map(row => {
-          const notes = getCell(row, c.notes);
-          const issues = validateAppointmentNotes(notes);
-          return {
-            rowNumber: row.__excelRow,
-            apptId: getCell(row, c.apptId),
-            client: getCell(row, c.client),
-            team: c.team ? getCell(row, c.team) : "",
-            status: getCell(row, c.status),
-            scheduledDate: getCell(row, c.scheduledDate),
-            category: c.category ? getCell(row, c.category) : "",
-            notes,
-            issues,
-            issueCount: issues.length,
-            scheduledDateObj: parseDate(getCell(row, c.scheduledDate))
-          };
-        })
-        .filter(row => row.issueCount > 0);
-
-      populateMonthFilter();
-      populateFilter("teamFilter", state.issueRows.map(r => r.team));
-      populateFilter("clientFilter", state.issueRows.map(r => r.client));
-      populateFilter("statusFilter", state.issueRows.map(r => r.status));
-      populateFilter("categoryFilter", state.issueRows.map(r => r.category));
-
-      el("issueRows").textContent = state.issueRows.length.toLocaleString();
-      el("totalIssues").textContent = state.issueRows.reduce((sum, row) => sum + row.issueCount, 0).toLocaleString();
-      copyBtn.disabled = false;
-      exportBtn.disabled = false;
-      clearFiltersBtn.disabled = false;
-      applyFilters();
-    }
-
-    function getCell(row, column) {
-      if (!column) return "";
-      const value = row[column];
-      return value === null || value === undefined ? "" : String(value);
-    }
-
-    function validateAppointmentNotes(notesInput) {
-      const text = String(notesInput ?? "");
-      const issues = [];
-      if (/[{}]/.test(text)) issues.push(...validateCurlyBrackets(text));
-      if (/[\[\]]/.test(text)) issues.push(...validateSquareBrackets(text));
-      return [...new Set(issues)];
-    }
-
-    function validateCurlyBrackets(text) {
-      const issues = [];
-      const open = (text.match(/{/g) || []).length;
-      const close = (text.match(/}/g) || []).length;
-      if (open !== close) issues.push("Curly brackets are not balanced");
-
-      const blocks = text.match(/{[^{}]*}/g) || [];
-      if ((open || close) && !blocks.length) issues.push("Invalid curly bracket structure");
-
-      blocks.forEach(block => {
-        const inside = block.slice(1, -1).trim();
-
-        const underscores = (inside.match(/_/g) || []).length;
-
-        // A single numeric amount like {500} is valid without underscore.
-        // It must be a positive number. Spaces around the value are ignored.
-        if (underscores === 0) {
-          if (/^\d+$/.test(inside) && Number(inside) > 0) return;
-          issues.push("Non-numeric value or invalid single amount in curly bracket (" + block + ")");
-          return;
-        }
-
-        if (underscores > 1) {
-          issues.push("More than one '_' in curly bracket value (" + block + ")");
-          return;
-        }
-
-        const parts = inside.split("_").map(x => x.trim());
-        if (parts.length !== 2 || parts.some(x => x === "")) {
-          issues.push("Invalid curly bracket structure (" + block + ")");
-          return;
-        }
-        if (!/^\d+$/.test(parts[0])) issues.push("Non-numeric sequence in curly bracket value (" + block + ")");
-        if (!/^\d+$/.test(parts[1])) issues.push("Non-numeric amount in curly bracket value (" + block + ")");
-      });
-
-      const stripped = text.replace(/{[^{}]*}/g, "");
-      if (/[{}]/.test(stripped)) issues.push("Invalid curly bracket structure");
-      return issues;
-    }
-
-    function validateSquareBrackets(text) {
-      const issues = [];
-      const open = (text.match(/\[/g) || []).length;
-      const close = (text.match(/\]/g) || []).length;
-      if (open !== close) issues.push("Square brackets are not balanced");
-
-      const blocks = text.match(/\[[^\[\]]*\]/g) || [];
-      if ((open || close) && !blocks.length) issues.push("Invalid square bracket structure");
-
-      const allBracketContent = blocks.map(block => block.slice(1, -1).trim());
-      const hasZeroBlock = allBracketContent.some(content => content === "0");
-      if (hasZeroBlock && !(blocks.length === 1 && allBracketContent[0] === "0")) {
-        issues.push("Extra '[0]' not required");
-      }
-
-      blocks.forEach(block => {
-        const inside = block.slice(1, -1).trim();
-        if (inside === "0") return;
-        if (inside === "") {
-          issues.push(`Invalid square bracket structure (${block})`);
-          return;
-        }
-
-        if (/[;|]/.test(inside)) issues.push("Wrong separator used (should be comma)");
-
-        const items = inside.split(",").map(item => item.trim()).filter(Boolean);
-        if (items.length > 6) issues.push(`More than 6 items in square bracket block (${block})`);
-
-        items.forEach(item => validateSquareItem(item, issues));
-      });
-
-      const stripped = text.replace(/\[[^\[\]]*\]/g, "");
-      if (/[\[\]]/.test(stripped)) issues.push("Invalid square bracket structure");
-      return issues;
-    }
-
-    function validateSquareItem(item, issues) {
-      if (item.includes("-") && !item.includes(":")) {
-        issues.push("Not valid format, using '-' instead of ':'");
-        return;
-      }
-      const colonCount = (item.match(/:/g) || []).length;
-      if (colonCount === 0) {
-        issues.push("Missing colon in square bracket set");
-        return;
-      }
-      if (colonCount > 1) {
-        issues.push(`Invalid square bracket item structure (${item})`);
-        return;
-      }
-
-      const [employeeRaw, valueRaw] = item.split(":");
-      const employee = employeeRaw.trim();
-      const value = valueRaw.trim();
-
-      if (!employee) issues.push(`Missing employee/id in square bracket item (${item})`);
-      if (employee.includes("_")) issues.push(`Employee id should not contain '_' (${employee})`);
-      if (!/^\d+$/.test(value)) issues.push(`Non-numeric value (${item})`);
-    }
-
-    function parseDate(value) {
-      if (!value) return null;
-      if (value instanceof Date && !isNaN(value)) return value;
-      const raw = String(value).trim();
-      if (!raw) return null;
-
-      let d = new Date(raw);
-      if (!isNaN(d)) return d;
-
-      const slash = raw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/);
-      if (slash) {
-        const day = Number(slash[1]);
-        const month = Number(slash[2]) - 1;
-        const year = Number(slash[3].length === 2 ? `20${slash[3]}` : slash[3]);
-        d = new Date(year, month, day);
-        if (!isNaN(d)) return d;
-      }
-      return null;
-    }
-
-    function dateToYMD(date) {
-      if (!date) return "";
-      const y = date.getFullYear();
-      const m = String(date.getMonth() + 1).padStart(2, "0");
-      const d = String(date.getDate()).padStart(2, "0");
-      return `${y}-${m}-${d}`;
-    }
-
-    function monthKey(date) {
-      if (!date) return "";
-      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-    }
-
-    function monthLabel(key) {
-      if (!key) return "";
-      const parts = key.split("-").map(Number);
-      const year = parts[0];
-      const month = parts[1];
-      return monthNames[month - 1] + "-" + String(year).slice(-2);
-    }
-
-    function populateMonthFilter() {
-      const select = el("monthFilter");
-      const current = select.value;
-      const unique = [...new Set(state.issueRows.map(r => monthKey(r.scheduledDateObj)).filter(Boolean))].sort();
-      select.innerHTML = `<option value="">All Months</option>` + unique.map(key => `<option value="${key}">${monthLabel(key)}</option>`).join("");
-      if (unique.includes(current)) select.value = current;
-    }
-
-    function populateFilter(id, values) {
-      const select = el(id);
-      const current = select.value;
-      const unique = [...new Set(values.map(v => String(v || "").trim()).filter(Boolean))]
-        .sort((a, b) => a.localeCompare(b));
-      select.innerHTML = `<option value="">All</option>` + unique.map(v => `<option value="${escapeAttr(v)}">${escapeHtml(v)}</option>`).join("");
-      if (unique.includes(current)) select.value = current;
-    }
-
-    function applyFilters() {
-      const month = el("monthFilter").value;
-      const from = el("fromDate").value ? new Date(el("fromDate").value + "T00:00:00") : null;
-      const to = el("toDate").value ? new Date(el("toDate").value + "T23:59:59") : null;
-      const team = el("teamFilter").value;
-      const client = el("clientFilter").value;
-      const status = el("statusFilter").value;
-      const category = el("categoryFilter").value;
-      const search = el("searchBox").value.trim().toLowerCase();
-
-      if (month) {
-        const [year, monthNum] = month.split("-").map(Number);
-        const start = new Date(year, monthNum - 1, 1);
-        const end = new Date(year, monthNum, 0);
-        el("fromDate").value = dateToYMD(start);
-        el("toDate").value = dateToYMD(end);
-      }
-
-      state.visibleRows = state.issueRows.filter(row => {
-        if (month && monthKey(row.scheduledDateObj) !== month) return false;
-        const activeFrom = el("fromDate").value ? new Date(el("fromDate").value + "T00:00:00") : from;
-        const activeTo = el("toDate").value ? new Date(el("toDate").value + "T23:59:59") : to;
-        if (activeFrom && (!row.scheduledDateObj || row.scheduledDateObj < activeFrom)) return false;
-        if (activeTo && (!row.scheduledDateObj || row.scheduledDateObj > activeTo)) return false;
-        if (team && row.team !== team) return false;
-        if (client && row.client !== client) return false;
-        if (status && row.status !== status) return false;
-        if (category && row.category !== category) return false;
-        if (search) {
-          const haystack = [row.rowNumber, row.apptId, row.client, row.team, row.status, row.scheduledDate, row.category, row.notes, row.issues.join(" ")].join(" ").toLowerCase();
-          if (!haystack.includes(search)) return false;
-        }
-        return true;
-      });
-
-      state.visibleRows = sortRows(state.visibleRows);
-      el("visibleRows").textContent = state.visibleRows.length.toLocaleString();
-      updateFilterSummary();
-      updateSortIndicators();
-      renderTable(state.visibleRows);
-    }
-
-    function handleSort(key) {
-      if (!key) return;
-      if (state.sortKey === key) {
-        state.sortDirection = state.sortDirection === "asc" ? "desc" : "asc";
-      } else {
-        state.sortKey = key;
-        state.sortDirection = "asc";
-      }
-      state.visibleRows = sortRows(state.visibleRows);
-      updateSortIndicators();
-      renderTable(state.visibleRows);
-    }
-
-    function sortRows(rows) {
-      const key = state.sortKey || "rowNumber";
-      const direction = state.sortDirection === "desc" ? -1 : 1;
-      return [...rows].sort((a, b) => compareRows(a, b, key) * direction);
-    }
-
-    function compareRows(a, b, key) {
-      if (key === "scheduledDate") {
-        const aTime = a.scheduledDateObj ? a.scheduledDateObj.getTime() : 0;
-        const bTime = b.scheduledDateObj ? b.scheduledDateObj.getTime() : 0;
-        return aTime - bTime;
-      }
-      if (key === "rowNumber" || key === "issueCount") {
-        return Number(a[key] || 0) - Number(b[key] || 0);
-      }
-      if (key === "issues") {
-        return a.issues.join(" ").localeCompare(b.issues.join(" "), undefined, { numeric: true, sensitivity: "base" });
-      }
-      return String(a[key] || "").localeCompare(String(b[key] || ""), undefined, { numeric: true, sensitivity: "base" });
-    }
-
-    function updateSortIndicators() {
-      document.querySelectorAll("[data-sort-icon]").forEach(icon => {
-        icon.textContent = icon.dataset.sortIcon === state.sortKey
-          ? (state.sortDirection === "asc" ? "▲" : "▼")
-          : "↕";
-      });
-    }
-
-    function updateFilterSummary() {
-      const chips = [];
-      const month = el("monthFilter").value;
-      if (month) chips.push(["Month", monthLabel(month)]);
-      if (el("fromDate").value) chips.push(["From", el("fromDate").value]);
-      if (el("toDate").value) chips.push(["To", el("toDate").value]);
-      if (el("teamFilter").value) chips.push(["Team", el("teamFilter").value]);
-      if (el("clientFilter").value) chips.push(["Client", el("clientFilter").value]);
-      if (el("statusFilter").value) chips.push(["Status", el("statusFilter").value]);
-      if (el("categoryFilter").value) chips.push(["Category", el("categoryFilter").value]);
-      if (el("searchBox").value.trim()) chips.push(["Search", el("searchBox").value.trim()]);
-
-      el("filterSummary").innerHTML = chips.length
-        ? `Selected filters: ${chips.map(([k, v]) => `<span class="filter-chip">${escapeHtml(k)}: ${escapeHtml(v)}</span>`).join("")}`
-        : "Selected filters: none";
-    }
-
-    function renderTable(rows) {
-      resultMessage.classList.toggle("hidden", rows.length !== 0);
-      if (!rows.length) {
-        renderEmpty(state.issueRows.length ? "No issue rows match the selected filters." : "No issue rows found.");
-        return;
-      }
-
-      tableBody.innerHTML = rows.map(row => `
-        <tr class="issue-row">
-          <td>${escapeHtml(row.rowNumber)}</td>
-          <td>${escapeHtml(row.apptId)}</td>
-          <td>${escapeHtml(row.client)}</td>
-          <td>${escapeHtml(row.team)}</td>
-          <td>${escapeHtml(row.status)}</td>
-          <td>${escapeHtml(row.scheduledDateObj ? dateToYMD(row.scheduledDateObj) : row.scheduledDate)}</td>
-          <td>${escapeHtml(row.category)}</td>
-          <td class="notes">${escapeHtml(row.notes)}</td>
-          <td class="issues">${escapeHtml(row.issues.map((issue, index) => `${index + 1}. ${issue}`).join("\n"))}</td>
-          <td><span class="pill">${row.issueCount}</span></td>
-        </tr>
-      `).join("");
-    }
-
-    function renderEmpty(message) {
-      tableBody.innerHTML = `<tr><td colspan="10" class="empty">${escapeHtml(message)}</td></tr>`;
-    }
-
-    function visibleRowsForExport() {
-      return state.visibleRows.map(row => ({
-        Row: row.rowNumber,
-        "Appt. Id": row.apptId,
-        Client: row.client,
-        "Team Member": row.team,
-        Status: row.status,
-        "Scheduled Date": row.scheduledDateObj ? dateToYMD(row.scheduledDateObj) : row.scheduledDate,
-        Category: row.category,
-        "Appointment Notes": row.notes,
-        Issues: row.issues.join(" | "),
-        "Issue Count": row.issueCount
-      }));
-    }
-
-    async function copyVisibleRows() {
-      const rows = visibleRowsForExport();
-      if (!rows.length) return;
-      const headers = Object.keys(rows[0]);
-      const tsv = [headers.join("\t"), ...rows.map(row => headers.map(h => cleanForClipboard(row[h])).join("\t"))].join("\n");
-      await navigator.clipboard.writeText(tsv);
-      loadStatus.textContent = `Copied ${rows.length.toLocaleString()} visible issue rows to clipboard.`;
-    }
-
-    function exportVisibleRows() {
-      const rows = visibleRowsForExport();
-      if (!rows.length) return;
-      const worksheet = XLSX.utils.json_to_sheet(rows);
-      worksheet["!cols"] = [
-        { wch: 8 }, { wch: 16 }, { wch: 24 }, { wch: 24 }, { wch: 14 },
-        { wch: 14 }, { wch: 34 }, { wch: 55 }, { wch: 55 }, { wch: 12 }
-      ];
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Audit Issues");
-      const safeName = (state.fileName || "DSR_Appointment_Data").replace(/\.[^.]+$/, "").replace(/[^a-z0-9]+/gi, "_");
-      XLSX.writeFile(workbook, `${safeName}_Audit_Issues.xlsx`);
-    }
-
-    function clearFilters() {
-      filterIds.forEach(id => {
-        const node = el(id);
-        if (node) node.value = "";
-      });
-      updateFilterSummary();
-      applyFilters();
-    }
-
-    function runValidationTests() {
-      const cases = [
-        { name: "valid curly amount", input: "{500}", valid: true },
-        { name: "valid curly sequence amount", input: "{1_500}", valid: true },
-        { name: "invalid curly zero", input: "{0}", valid: false },
-        { name: "valid square items", input: "[admin:500, Ins32:550]", valid: true },
-        { name: "invalid square dash", input: "[admin-500]", valid: false },
-        { name: "invalid square separator", input: "[admin:500; Ins32:550]", valid: false },
-        { name: "invalid square underscore id", input: "[Ins_32:550]", valid: false }
-      ];
-
-      const failed = cases.filter(test => {
-        const issueCount = validateAppointmentNotes(test.input).length;
-        const isValid = issueCount === 0;
-        const passed = isValid === test.valid;
-        if (!passed) console.error("Audit validation test failed:", test.name, validateAppointmentNotes(test.input));
-        return !passed;
-      });
-
-      if (!failed.length) console.info("DSR audit validation tests passed: " + cases.length + "/" + cases.length);
-    }
-
-    function resetApp() {
-      state.rawRows = [];
-      state.columns = {};
-      state.issueRows = [];
-      state.visibleRows = [];
-      state.fileName = "";
-      state.sortKey = "rowNumber";
-      state.sortDirection = "asc";
-      updateSortIndicators();
-      fileInput.value = "";
-      clearFilters();
-      ["teamFilter", "clientFilter", "statusFilter", "categoryFilter"].forEach(id => el(id).innerHTML = `<option value="">All</option>`);
-      el("monthFilter").innerHTML = `<option value="">All Months</option>`;
-      updateFilterSummary();
-      ["totalRows", "issueRows", "visibleRows", "totalIssues"].forEach(id => el(id).textContent = "0");
-      auditBtn.disabled = true;
-      resetBtn.disabled = true;
-      copyBtn.disabled = true;
-      exportBtn.disabled = true;
-      clearFiltersBtn.disabled = true;
-      loadStatus.textContent = "No file loaded.";
-      resultMessage.classList.add("hidden");
-      renderEmpty("Upload an Excel file, then run the audit.");
-    }
-
-    function cleanForClipboard(value) {
-      return String(value ?? "").replace(/\r?\n/g, " ").replace(/\t/g, " ");
-    }
-
-    function escapeHtml(value) {
-      return String(value ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    }
-
-    function escapeAttr(value) {
-      return escapeHtml(value).replace(/`/g, "&#096;");
-    }
+      newGame(true);
+    });
+
+    els.p1Name.addEventListener('input', updateUI);
+    els.p2Name.addEventListener('input', updateUI);
+
+    els.playAgainBtn.addEventListener('click', () => newGame(true));
+    els.closeWinnerBtn.addEventListener('click', hideWinnerOverlay);
+    els.winnerOverlay.addEventListener('click', (e) => {
+      if (e.target === els.winnerOverlay) hideWinnerOverlay();
+    });
+
+    window.addEventListener('resize', () => {
+      resizeCanvasForDisplay();
+      draw();
+    });
+
+    const savedTheme = localStorage.getItem('dotsBoxesTheme') || 'light';
+    els.themeSelect.value = savedTheme;
+    els.p1Color.value = colors.p1;
+    els.p2Color.value = colors.p2;
+    els.pcColor.value = colors.pc;
+
+    setTheme(savedTheme);
+    newGame(false);
   </script>
 </body>
 </html>
