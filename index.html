@@ -352,24 +352,6 @@
       font-size: 21px;
     }
 
-    .message {
-      padding: 10px 11px;
-      border-radius: 14px;
-      background: var(--success-bg);
-      border: 1px solid var(--success-border);
-      color: var(--success-text);
-      font-weight: 800;
-      line-height: 1.35;
-      font-size: 13px;
-    }
-
-    .small-note {
-      margin: 8px 0 0;
-      color: var(--muted);
-      font-size: 11px;
-      line-height: 1.35;
-    }
-
     .overlay {
       position: absolute;
       inset: 0;
@@ -825,12 +807,6 @@
           <div class="stat"><span>Boxes Left</span><strong id="boxesLeft">0</strong></div>
         </div>
       </section>
-
-      <section class="card">
-        <h2>Result / Status</h2>
-        <div class="message" id="statusMessage">Start drawing lines between dots.</div>
-        <p class="small-note">Rows and columns can be different. The board keeps its rows/columns proportional and fits inside the play area. If needed, the play area can scroll.</p>
-      </section>
     </aside>
   </main>
 
@@ -866,7 +842,6 @@
       drawnLines: document.getElementById('drawnLines'),
       remainingLines: document.getElementById('remainingLines'),
       boxesLeft: document.getElementById('boxesLeft'),
-      statusMessage: document.getElementById('statusMessage'),
       winnerOverlay: document.getElementById('winnerOverlay'),
       winnerTitle: document.getElementById('winnerTitle'),
       winnerSubtitle: document.getElementById('winnerSubtitle'),
@@ -929,6 +904,8 @@
         drawnLines: 0,
         totalLines,
         hover: null,
+        lastMove: null,
+        lastMovePlayer: null,
         gameOver: false,
         names: getNames(),
         mode: els.modeSelect.value
@@ -1068,6 +1045,7 @@
       drawBoxes(m);
       drawLines(m);
       drawHover(m);
+      drawLastMove(m);
       drawDots(m);
     }
 
@@ -1158,6 +1136,58 @@
       ctx.globalAlpha = 1;
     }
 
+
+    function drawLastMove(m) {
+      if (!state.lastMove || state.gameOver && state.lastMovePlayer === null) return;
+
+      const move = state.lastMove;
+      const player = state.lastMovePlayer;
+      const color = player === 0 ? colors.p1 : (state.mode === 'pc' ? colors.pc : colors.p2);
+      const glowColor = player === 0 ? hexToRgba(colors.p1, 0.7) : hexToRgba(state.mode === 'pc' ? colors.pc : colors.p2, 0.7);
+
+      ctx.save();
+      ctx.lineCap = 'round';
+
+      // Outer glow: makes the previous move obvious until the next player moves.
+      ctx.shadowColor = glowColor;
+      ctx.shadowBlur = Math.max(12, Math.min(26, m.step * 0.42));
+      ctx.strokeStyle = color;
+      ctx.globalAlpha = 0.92;
+      ctx.lineWidth = Math.max(7, Math.min(14, m.step * 0.24));
+      strokeMovePath(move, m);
+
+      // Bright inner stroke for contrast on both light and dark themes.
+      ctx.shadowBlur = 0;
+      ctx.strokeStyle = isDark() ? '#ffffff' : '#111827';
+      ctx.globalAlpha = 0.82;
+      ctx.lineWidth = Math.max(3, Math.min(7, m.step * 0.12));
+      strokeMovePath(move, m);
+
+      // Final colored center line so the owner is still clear.
+      ctx.strokeStyle = color;
+      ctx.globalAlpha = 1;
+      ctx.lineWidth = Math.max(2, Math.min(5, m.step * 0.08));
+      strokeMovePath(move, m);
+
+      ctx.restore();
+    }
+
+    function strokeMovePath(move, m) {
+      ctx.beginPath();
+      if (move.type === 'h') {
+        ctx.moveTo(m.x0 + move.c * m.step, m.y0 + move.r * m.step);
+        ctx.lineTo(m.x0 + (move.c + 1) * m.step, m.y0 + move.r * m.step);
+      } else {
+        ctx.moveTo(m.x0 + move.c * m.step, m.y0 + move.r * m.step);
+        ctx.lineTo(m.x0 + move.c * m.step, m.y0 + (move.r + 1) * m.step);
+      }
+      ctx.stroke();
+    }
+
+    function describeMove(move) {
+      const orientation = move.type === 'h' ? 'horizontal' : 'vertical';
+      return `${orientation} line at row ${move.r + 1}, column ${move.c + 1}`;
+    }
     function drawDots(m) {
       const radius = Math.max(2.2, Math.min(6, m.step * 0.10));
 
@@ -1253,15 +1283,17 @@
 
       const player = state.current;
       setLine(move, player);
+      state.lastMove = { ...move };
+      state.lastMovePlayer = player;
 
       const completed = checkCompletedBoxes(move, player);
       const name = state.names[player];
 
       if (completed.length === 0) {
         state.current = 1 - state.current;
-        setStatus(`${name} played. Turn switched.`);
+        setStatus(`${name} moved: ${describeMove(move)}. Highlighted line shows the latest move.`);
       } else {
-        setStatus(`${name} scored ${completed.length} box${completed.length > 1 ? 'es' : ''} and keeps the turn.`);
+        setStatus(`${name} moved: ${describeMove(move)} and scored ${completed.length} box${completed.length > 1 ? 'es' : ''}. Highlighted line shows the latest move.`);
       }
 
       state.hover = null;
@@ -1467,7 +1499,7 @@
     }
 
     function setStatus(text) {
-      els.statusMessage.textContent = text;
+      // Status text intentionally disabled; last-move highlight is enough.
     }
 
     function pointerPosition(event) {
