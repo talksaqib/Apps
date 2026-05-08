@@ -141,8 +141,13 @@
 
     .scores-top {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 10px;
+    }
+
+    .score-card.is-hidden,
+    .player-card.is-hidden {
+      display: none;
     }
 
     .score-card {
@@ -328,10 +333,37 @@
     }
 
     .compact-row,
-    .stats-grid {
+    .stats-grid,
+    .player-type-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 8px;
+    }
+
+    .player-settings {
+      display: grid;
+      gap: 8px;
+    }
+
+    .player-card {
+      display: grid;
+      gap: 8px;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--panel-soft);
+    }
+
+    .player-card-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 900;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
     .stat {
@@ -644,7 +676,8 @@
 
       .compact-row,
       .stats-grid,
-      .scores-top {
+      .scores-top,
+      .player-type-row {
         grid-template-columns: 1fr 1fr;
       }
 
@@ -668,8 +701,8 @@
         </div>
       </div>
 
-      <section class="scores-top" aria-label="Scores">
-        <div class="score-card">
+      <section class="scores-top" id="scoresTop" aria-label="Scores">
+        <div class="score-card" id="scoreCard1">
           <div class="left">
             <span class="color-chip" id="p1Chip"></span>
             <span id="p1ScoreName">Player 1</span>
@@ -677,12 +710,28 @@
           <span class="score-value" id="p1Score">0</span>
         </div>
 
-        <div class="score-card">
+        <div class="score-card" id="scoreCard2">
           <div class="left">
             <span class="color-chip" id="p2Chip"></span>
-            <span id="p2ScoreName">PC</span>
+            <span id="p2ScoreName">Player 2</span>
           </div>
           <span class="score-value" id="p2Score">0</span>
+        </div>
+
+        <div class="score-card is-hidden" id="scoreCard3">
+          <div class="left">
+            <span class="color-chip" id="p3Chip"></span>
+            <span id="p3ScoreName">Player 3</span>
+          </div>
+          <span class="score-value" id="p3Score">0</span>
+        </div>
+
+        <div class="score-card is-hidden" id="scoreCard4">
+          <div class="left">
+            <span class="color-chip" id="p4Chip"></span>
+            <span id="p4ScoreName">Player 4</span>
+          </div>
+          <span class="score-value" id="p4Score">0</span>
         </div>
       </section>
 
@@ -749,48 +798,119 @@
             </label>
           </div>
 
-          <label>
-            Theme
-            <select id="themeSelect">
-              <option value="light">Light</option>
-              <option value="dark" selected>Dark</option>
-            </select>
-          </label>
-
-
-          <label>
-            Player 1 Name
-            <input id="p1Name" value="Player 1" maxlength="18" />
-          </label>
-
-          <label>
-            Player 2 Name
-            <input id="p2Name" value="PC" maxlength="18" />
-          </label>
-
-          <label>
-            Opponent
-            <select id="modeSelect">
-              <option value="human">2 Players</option>
-              <option value="pc" selected>Play with PC</option>
-            </select>
-          </label>
-
           <div class="compact-row">
             <label>
-              Player 1 Color
-              <input id="p1Color" type="color" value="#2563eb" />
+              Theme
+              <select id="themeSelect">
+                <option value="light">Light</option>
+                <option value="dark" selected>Dark</option>
+              </select>
             </label>
+
             <label>
-              Player 2 Color
-              <input id="p2Color" type="color" value="#f97316" />
+              Start With Random Lines
+              <select id="startingLinesSelect">
+                <option value="0" selected>None</option>
+                <option value="10">10% random lines</option>
+                <option value="20">20% random lines</option>
+                <option value="30">30% random lines</option>
+                <option value="40">40% random lines</option>
+                <option value="50">50% random lines</option>
+              </select>
             </label>
           </div>
 
           <label>
-            PC Color
-            <input id="pcColor" type="color" value="#7c3aed" />
+            Number of Players
+            <select id="playerCountSelect">
+              <option value="2" selected>2 players</option>
+              <option value="3">3 players</option>
+              <option value="4">4 players</option>
+            </select>
           </label>
+
+          <div class="player-settings" id="playerSettings">
+            <div class="player-card" id="playerCard1">
+              <div class="player-card-title">Player 1</div>
+              <div class="player-type-row">
+                <label>
+                  Type
+                  <select id="p1Type" disabled>
+                    <option value="human" selected>Human</option>
+                  </select>
+                </label>
+                <label>
+                  Color
+                  <input id="p1Color" type="color" value="#2563eb" />
+                </label>
+              </div>
+              <label>
+                Name
+                <input id="p1Name" value="Player 1" maxlength="18" />
+              </label>
+            </div>
+
+            <div class="player-card" id="playerCard2">
+              <div class="player-card-title">Player 2</div>
+              <div class="player-type-row">
+                <label>
+                  Type
+                  <select id="p2Type">
+                    <option value="human">Human</option>
+                    <option value="pc" selected>PC</option>
+                  </select>
+                </label>
+                <label>
+                  Color
+                  <input id="p2Color" type="color" value="#7c3aed" />
+                </label>
+              </div>
+              <label>
+                Name
+                <input id="p2Name" value="PC" maxlength="18" />
+              </label>
+            </div>
+
+            <div class="player-card is-hidden" id="playerCard3">
+              <div class="player-card-title">Player 3</div>
+              <div class="player-type-row">
+                <label>
+                  Type
+                  <select id="p3Type" disabled>
+                    <option value="human" selected>Human</option>
+                  </select>
+                </label>
+                <label>
+                  Color
+                  <input id="p3Color" type="color" value="#f97316" />
+                </label>
+              </div>
+              <label>
+                Name
+                <input id="p3Name" value="Player 3" maxlength="18" />
+              </label>
+            </div>
+
+            <div class="player-card is-hidden" id="playerCard4">
+              <div class="player-card-title">Player 4</div>
+              <div class="player-type-row">
+                <label>
+                  Type
+                  <select id="p4Type" disabled>
+                    <option value="human" selected>Human</option>
+                  </select>
+                </label>
+                <label>
+                  Color
+                  <input id="p4Color" type="color" value="#22c55e" />
+                </label>
+              </div>
+              <label>
+                Name
+                <input id="p4Name" value="Player 4" maxlength="18" />
+              </label>
+            </div>
+          </div>
 
           <button id="newGameBtn">New Game</button>
           <button id="startHideBtn" class="secondary">Start & Hide Options</button>
@@ -820,24 +940,22 @@
       rowsSelect: document.getElementById('rowsSelect'),
       colsSelect: document.getElementById('colsSelect'),
       themeSelect: document.getElementById('themeSelect'),
-      p1Color: document.getElementById('p1Color'),
-      p2Color: document.getElementById('p2Color'),
-      pcColor: document.getElementById('pcColor'),
-      p1Name: document.getElementById('p1Name'),
-      p2Name: document.getElementById('p2Name'),
-      modeSelect: document.getElementById('modeSelect'),
+      startingLinesSelect: document.getElementById('startingLinesSelect'),
+      playerCountSelect: document.getElementById('playerCountSelect'),
+      playerCards: [1, 2, 3, 4].map(n => document.getElementById(`playerCard${n}`)),
+      playerTypes: [1, 2, 3, 4].map(n => document.getElementById(`p${n}Type`)),
+      playerNames: [1, 2, 3, 4].map(n => document.getElementById(`p${n}Name`)),
+      playerColors: [1, 2, 3, 4].map(n => document.getElementById(`p${n}Color`)),
       newGameBtn: document.getElementById('newGameBtn'),
       startHideBtn: document.getElementById('startHideBtn'),
       resetStatsBtn: document.getElementById('resetStatsBtn'),
       togglePanelBtn: document.getElementById('togglePanelBtn'),
       turnDot: document.getElementById('turnDot'),
       turnText: document.getElementById('turnText'),
-      p1Chip: document.getElementById('p1Chip'),
-      p2Chip: document.getElementById('p2Chip'),
-      p1ScoreName: document.getElementById('p1ScoreName'),
-      p2ScoreName: document.getElementById('p2ScoreName'),
-      p1Score: document.getElementById('p1Score'),
-      p2Score: document.getElementById('p2Score'),
+      scoreCards: [1, 2, 3, 4].map(n => document.getElementById(`scoreCard${n}`)),
+      scoreChips: [1, 2, 3, 4].map(n => document.getElementById(`p${n}Chip`)),
+      scoreNames: [1, 2, 3, 4].map(n => document.getElementById(`p${n}ScoreName`)),
+      scoreValues: [1, 2, 3, 4].map(n => document.getElementById(`p${n}Score`)),
       gamesPlayed: document.getElementById('gamesPlayed'),
       drawnLines: document.getElementById('drawnLines'),
       remainingLines: document.getElementById('remainingLines'),
@@ -853,9 +971,13 @@
     };
 
     const colors = {
-      p1: localStorage.getItem('dotsBoxesP1Color') || '#2563eb',
-      p2: localStorage.getItem('dotsBoxesP2Color') || '#f97316',
-      pc: localStorage.getItem('dotsBoxesPCColor') || '#7c3aed',
+      players: [
+        localStorage.getItem('dotsBoxesP1Color') || '#2563eb',
+        localStorage.getItem('dotsBoxesP2Color') || '#7c3aed',
+        localStorage.getItem('dotsBoxesP3Color') || '#f97316',
+        localStorage.getItem('dotsBoxesP4Color') || '#22c55e'
+      ],
+      starter: '#64748b',
       hoverLight: '#111827',
       hoverDark: '#f8fafc',
       dotLight: '#172033',
@@ -874,11 +996,92 @@
       return document.body.classList.contains('dark');
     }
 
+    function getPlayerCount() {
+      return Number(els.playerCountSelect.value || 2);
+    }
+
+    function defaultPlayerName(index, type) {
+      if (type === 'pc') {
+        const pcNumber = els.playerTypes.slice(0, index + 1).filter(select => select.value === 'pc').length;
+        return `PC ${pcNumber}`;
+      }
+      return `Player ${index + 1}`;
+    }
+
+    function getPlayers() {
+      const count = getPlayerCount();
+      const players = [];
+
+      for (let i = 0; i < count; i++) {
+        const type = els.playerTypes[i].value;
+        const fallback = defaultPlayerName(i, type);
+        const name = els.playerNames[i].value.trim() || fallback;
+        players.push({ name, type, color: colors.players[i] });
+      }
+
+      return players;
+    }
+
     function getNames() {
-      const player1 = els.p1Name.value.trim() || 'Player 1';
-      const isPc = els.modeSelect.value === 'pc';
-      const player2 = isPc ? 'PC' : (els.p2Name.value.trim() || 'Player 2');
-      return [player1, player2];
+      return getPlayers().map(player => player.name);
+    }
+
+    function playerColor(index) {
+      return colors.players[index] || colors.players[0];
+    }
+
+    function nextPlayerIndex(from = state.current) {
+      return (from + 1) % state.players.length;
+    }
+
+    function syncPlayerSetupVisibility() {
+      const count = getPlayerCount();
+
+      els.playerCards.forEach((card, index) => {
+        card.classList.toggle('is-hidden', index >= count);
+      });
+
+      els.scoreCards.forEach((card, index) => {
+        card.classList.toggle('is-hidden', index >= count);
+      });
+
+      // Rules:
+      // - PC is only allowed in a 2-player Human vs PC game.
+      // - Player 1 is always human, so PC vs PC can never happen.
+      // - 3-player and 4-player games are human-only.
+      els.playerTypes[0].value = 'human';
+      els.playerTypes[0].disabled = true;
+
+      els.playerTypes.forEach((typeSelect, index) => {
+        if (index === 0) return;
+
+        const pcOption = Array.from(typeSelect.options).find(option => option.value === 'pc');
+        const canBePc = count === 2 && index === 1;
+
+        if (pcOption) pcOption.disabled = !canBePc;
+
+        if (!canBePc && typeSelect.value === 'pc') {
+          typeSelect.value = 'human';
+        }
+
+        typeSelect.disabled = !canBePc;
+      });
+
+      // Keep names readable when switching between Human vs PC and human-only multiplayer.
+      els.playerTypes.forEach((typeSelect, index) => {
+        const input = els.playerNames[index];
+        const current = input.value.trim();
+        const autoHuman = `Player ${index + 1}`;
+        const looksAutoPc = /^PC\s*\d*$/i.test(current);
+
+        if (typeSelect.value === 'pc' && (!current || current === autoHuman || looksAutoPc)) {
+          input.value = 'PC';
+        } else if (typeSelect.value === 'human' && (!current || looksAutoPc)) {
+          input.value = autoHuman;
+        }
+      });
+
+      if (state) updateUI();
     }
 
     function getInitial(name) {
@@ -887,9 +1090,11 @@
     }
 
     function newGame(incrementGames = true) {
+      syncPlayerSetupVisibility();
       const rows = Number(els.rowsSelect.value);
       const cols = Number(els.colsSelect.value);
       const totalLines = (rows + 1) * cols + rows * (cols + 1);
+      const players = getPlayers();
 
       state = {
         rows,
@@ -900,20 +1105,18 @@
         vLines: Array.from({ length: rows }, () => Array(cols + 1).fill(null)),
         owners: Array.from({ length: rows }, () => Array(cols).fill(null)),
         current: 0,
-        scores: [0, 0],
+        players,
+        names: players.map(player => player.name),
+        scores: Array(players.length).fill(0),
         drawnLines: 0,
         totalLines,
         hover: null,
         lastMove: null,
         lastMovePlayer: null,
-        gameOver: false,
-        names: getNames(),
-        mode: els.modeSelect.value
+        gameOver: false
       };
 
-      if (state.mode === 'pc') {
-        els.p2Name.value = 'PC';
-      }
+      addRandomStartingLines(Number(els.startingLinesSelect.value || 0));
 
       if (incrementGames) {
         stats.gamesPlayed += 1;
@@ -925,6 +1128,10 @@
       resizeCanvasForDisplay();
       updateUI();
       draw();
+
+      if (!state.gameOver && isPcTurn()) {
+        setTimeout(pcMove, 350);
+      }
     }
 
     function saveStats() {
@@ -932,7 +1139,7 @@
     }
 
     function resetStats() {
-      stats = { gamesPlayed: 0, p1Wins: 0, p2Wins: 0, draws: 0 };
+      stats = { gamesPlayed: 0, wins: {}, draws: 0 };
       saveStats();
       updateUI();
       setStatus('Statistics reset. Current game continues.');
@@ -956,13 +1163,16 @@
     }
 
     function applyPlayerColors() {
-      colors.p1 = els.p1Color.value;
-      colors.p2 = els.p2Color.value;
-      colors.pc = els.pcColor.value;
+      els.playerColors.forEach((input, index) => {
+        colors.players[index] = input.value;
+        localStorage.setItem(`dotsBoxesP${index + 1}Color`, colors.players[index]);
+      });
 
-      localStorage.setItem('dotsBoxesP1Color', colors.p1);
-      localStorage.setItem('dotsBoxesP2Color', colors.p2);
-      localStorage.setItem('dotsBoxesPCColor', colors.pc);
+      if (state) {
+        state.players.forEach((player, index) => {
+          player.color = colors.players[index];
+        });
+      }
 
       updateUI();
       draw();
@@ -1035,7 +1245,8 @@
 
     function lineOwner(line) {
       if (!line) return null;
-      return line.player === 0 ? colors.p1 : (state.mode === 'pc' ? colors.pc : colors.p2);
+      if (line.player === 'starter') return colors.starter;
+      return playerColor(line.player);
     }
 
     function draw() {
@@ -1055,10 +1266,7 @@
           const owner = state.owners[r][c];
           if (owner === null) continue;
 
-          ctx.fillStyle =
-            owner === 0
-              ? hexToRgba(colors.p1, 0.22)
-              : hexToRgba(state.mode === 'pc' ? colors.pc : colors.p2, 0.22);
+          ctx.fillStyle = hexToRgba(playerColor(owner), 0.22);
 
           ctx.fillRect(
             m.x0 + c * m.step + 2,
@@ -1068,7 +1276,7 @@
           );
 
           if (m.step > 20) {
-            ctx.fillStyle = owner === 0 ? colors.p1 : (state.mode === 'pc' ? colors.pc : colors.p2);
+            ctx.fillStyle = playerColor(owner);
             ctx.font = `900 ${Math.max(11, m.step * 0.36)}px Arial`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
@@ -1142,8 +1350,8 @@
 
       const move = state.lastMove;
       const player = state.lastMovePlayer;
-      const color = player === 0 ? colors.p1 : (state.mode === 'pc' ? colors.pc : colors.p2);
-      const glowColor = player === 0 ? hexToRgba(colors.p1, 0.7) : hexToRgba(state.mode === 'pc' ? colors.pc : colors.p2, 0.7);
+      const color = playerColor(player);
+      const glowColor = hexToRgba(color, 0.7);
 
       ctx.save();
       ctx.lineCap = 'round';
@@ -1237,6 +1445,103 @@
       return best ? { type: best.type, r: best.r, c: best.c } : null;
     }
 
+    function shuffledMoves() {
+      const moves = availableMoves();
+      for (let i = moves.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [moves[i], moves[j]] = [moves[j], moves[i]];
+      }
+      return moves;
+    }
+
+    function cloneGrid(grid) {
+      return grid.map(row => row.slice());
+    }
+
+    function countBoxSides(r, c) {
+      return [
+        state.hLines[r][c],
+        state.hLines[r + 1][c],
+        state.vLines[r][c],
+        state.vLines[r][c + 1]
+      ].filter(Boolean).length;
+    }
+
+    function affectedBoxes(move) {
+      const boxes = [];
+
+      if (move.type === 'h') {
+        if (move.r > 0) boxes.push([move.r - 1, move.c]);
+        if (move.r < state.rows) boxes.push([move.r, move.c]);
+      } else {
+        if (move.c > 0) boxes.push([move.r, move.c - 1]);
+        if (move.c < state.cols) boxes.push([move.r, move.c]);
+      }
+
+      return boxes;
+    }
+
+    function canUseAsStartingLine(move) {
+      if (!move) return false;
+      if (move.type === 'h' && state.hLines[move.r][move.c]) return false;
+      if (move.type === 'v' && state.vLines[move.r][move.c]) return false;
+
+      const boxes = affectedBoxes(move);
+
+      for (const [r, c] of boxes) {
+        if (state.owners[r][c] !== null) return false;
+
+        const existingSides = countBoxSides(r, c);
+        const sidesAfterMove = existingSides + 1;
+
+        // Starting layout must never create a 3-sided or 4-sided box.
+        // A box may begin with 0, 1, or 2 sides only.
+        if (sidesAfterMove > 2) return false;
+      }
+
+      return true;
+    }
+
+    function addRandomStartingLines(percent) {
+      if (!percent) return;
+
+      const target = Math.round(state.totalLines * (percent / 100));
+      let best = null;
+
+      for (let attempt = 0; attempt < 48; attempt++) {
+        state.hLines = Array.from({ length: state.rows + 1 }, () => Array(state.cols).fill(null));
+        state.vLines = Array.from({ length: state.rows }, () => Array(state.cols + 1).fill(null));
+        state.drawnLines = 0;
+
+        const moves = shuffledMoves();
+        for (const move of moves) {
+          if (state.drawnLines >= target) break;
+          if (canUseAsStartingLine(move)) {
+            setLine(move, 'starter');
+          }
+        }
+
+        if (!best || state.drawnLines > best.count) {
+          best = {
+            count: state.drawnLines,
+            hLines: cloneGrid(state.hLines),
+            vLines: cloneGrid(state.vLines)
+          };
+        }
+
+        if (state.drawnLines >= target) break;
+      }
+
+      if (best) {
+        state.hLines = best.hLines;
+        state.vLines = best.vLines;
+        state.drawnLines = best.count;
+      }
+
+      state.lastMove = null;
+      state.lastMovePlayer = null;
+    }
+
     function setLine(move, player) {
       if (move.type === 'h') state.hLines[move.r][move.c] = { player };
       else state.vLines[move.r][move.c] = { player };
@@ -1290,7 +1595,7 @@
       const name = state.names[player];
 
       if (completed.length === 0) {
-        state.current = 1 - state.current;
+        state.current = nextPlayerIndex();
         setStatus(`${name} moved: ${describeMove(move)}. Highlighted line shows the latest move.`);
       } else {
         setStatus(`${name} moved: ${describeMove(move)} and scored ${completed.length} box${completed.length > 1 ? 'es' : ''}. Highlighted line shows the latest move.`);
@@ -1311,29 +1616,31 @@
 
       state.gameOver = true;
 
-      const [p1, p2] = state.names;
+      const maxScore = Math.max(...state.scores);
+      const winners = state.scores
+        .map((score, index) => ({ score, index, name: state.names[index] }))
+        .filter(item => item.score === maxScore);
+
       let title, subtitle, emoji;
 
-      if (state.scores[0] > state.scores[1]) {
-        stats.p1Wins += 1;
-        title = `${p1} Wins!`;
-        subtitle = `Congratulations! ${p1} completed more boxes.`;
-        emoji = '🎆';
-      } else if (state.scores[1] > state.scores[0]) {
-        stats.p2Wins += 1;
-        title = `${p2} Wins!`;
-        subtitle = `Congratulations! ${p2} completed more boxes.`;
+      if (winners.length === 1) {
+        const winner = winners[0];
+        stats.wins = stats.wins || {};
+        stats.wins[winner.name] = (stats.wins[winner.name] || 0) + 1;
+        title = `${winner.name} Wins!`;
+        subtitle = `Congratulations! ${winner.name} completed the most boxes.`;
         emoji = '🎉';
       } else {
-        stats.draws += 1;
+        stats.draws = (stats.draws || 0) + 1;
         title = `It's a Draw!`;
-        subtitle = `Both players finished with the same score.`;
+        subtitle = `${winners.map(winner => winner.name).join(' and ')} finished with the same score.`;
         emoji = '🤝';
       }
 
       saveStats();
       setStatus(title);
-      showWinnerOverlay(title, subtitle, `${p1} ${state.scores[0]} - ${state.scores[1]} ${p2}`, emoji);
+      const scoreText = state.names.map((name, index) => `${name} ${state.scores[index]}`).join(' • ');
+      showWinnerOverlay(title, subtitle, scoreText, emoji);
     }
 
     function showWinnerOverlay(title, subtitle, scoreText, emoji) {
@@ -1352,7 +1659,7 @@
 
     function launchCelebration() {
       els.celebration.innerHTML = '';
-      const palette = [colors.p1, state.mode === 'pc' ? colors.pc : colors.p2, '#facc15', '#22c55e', '#ec4899', '#38bdf8'];
+      const palette = [...colors.players, '#facc15', '#22c55e', '#ec4899', '#38bdf8'];
 
       for (let i = 0; i < 70; i++) {
         const piece = document.createElement('span');
@@ -1368,7 +1675,7 @@
     }
 
     function isPcTurn() {
-      return state && state.mode === 'pc' && state.current === 1 && !state.gameOver;
+      return state && !state.gameOver && state.players[state.current]?.type === 'pc';
     }
 
     function availableMoves() {
@@ -1468,26 +1775,31 @@
     function updateUI() {
       if (!state) return;
 
-      const names = getNames();
-      if (!state.gameOver) state.names = names;
+      const players = getPlayers();
+      if (!state.gameOver) {
+        state.players = players;
+        state.names = players.map(player => player.name);
+      }
 
-      els.p1ScoreName.textContent = state.names[0];
-      els.p2ScoreName.textContent = state.names[1];
-      els.p1Score.textContent = state.scores[0];
-      els.p2Score.textContent = state.scores[1];
+      els.scoreCards.forEach((card, index) => {
+        const active = index < state.players.length;
+        card.classList.toggle('is-hidden', !active);
+        if (!active) return;
 
-      els.p1Chip.style.background = colors.p1;
-      els.p2Chip.style.background = state.mode === 'pc' ? colors.pc : colors.p2;
+        els.scoreNames[index].textContent = state.names[index];
+        els.scoreValues[index].textContent = state.scores[index] || 0;
+        els.scoreChips[index].style.background = playerColor(index);
+      });
 
-      const currentColor = state.current === 0 ? colors.p1 : (state.mode === 'pc' ? colors.pc : colors.p2);
+      const currentColor = playerColor(state.current);
       els.turnDot.style.background = currentColor;
       els.turnDot.style.boxShadow = `0 0 0 7px ${hexToRgba(currentColor, 0.18)}`;
       els.turnText.textContent = state.gameOver ? 'GAME OVER' : `TURN: ${state.names[state.current]}`;
 
-      els.gamesPlayed.textContent = stats.gamesPlayed;
+      els.gamesPlayed.textContent = stats.gamesPlayed || 0;
       els.drawnLines.textContent = state.drawnLines;
       els.remainingLines.textContent = state.totalLines - state.drawnLines;
-      els.boxesLeft.textContent = state.rows * state.cols - state.scores[0] - state.scores[1];
+      els.boxesLeft.textContent = state.rows * state.cols - state.scores.reduce((sum, score) => sum + score, 0);
     }
 
     function hexToRgba(hex, alpha) {
@@ -1551,21 +1863,23 @@
       setPanelHidden(!els.app.classList.contains('panel-hidden'));
     });
 
-    els.p1Color.addEventListener('input', applyPlayerColors);
-    els.p2Color.addEventListener('input', applyPlayerColors);
-    els.pcColor.addEventListener('input', applyPlayerColors);
+    els.playerColors.forEach(input => input.addEventListener('input', applyPlayerColors));
 
-    els.modeSelect.addEventListener('change', () => {
-      if (els.modeSelect.value === 'pc') {
-        els.p2Name.value = 'PC';
-      } else if (els.p2Name.value.trim().toLowerCase() === 'pc') {
-        els.p2Name.value = 'Player 2';
-      }
+    els.playerCountSelect.addEventListener('change', () => {
+      syncPlayerSetupVisibility();
       newGame(true);
     });
 
-    els.p1Name.addEventListener('input', updateUI);
-    els.p2Name.addEventListener('input', updateUI);
+    els.startingLinesSelect.addEventListener('change', () => newGame(true));
+
+    els.playerTypes.forEach(select => {
+      select.addEventListener('change', () => {
+        syncPlayerSetupVisibility();
+        newGame(true);
+      });
+    });
+
+    els.playerNames.forEach(input => input.addEventListener('input', updateUI));
 
     els.playAgainBtn.addEventListener('click', () => newGame(true));
     els.closeWinnerBtn.addEventListener('click', hideWinnerOverlay);
@@ -1580,10 +1894,11 @@
 
     const savedTheme = localStorage.getItem('dotsBoxesTheme') || 'dark';
     els.themeSelect.value = savedTheme;
-    els.p1Color.value = colors.p1;
-    els.p2Color.value = colors.p2;
-    els.pcColor.value = colors.pc;
+    els.playerColors.forEach((input, index) => {
+      input.value = colors.players[index];
+    });
 
+    syncPlayerSetupVisibility();
     setTheme(savedTheme);
     newGame(false);
 
