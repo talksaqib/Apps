@@ -2,40 +2,33 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dots & Boxes Game</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Dots & Boxes</title>
   <style>
     :root {
-      --bg: #f5f7fb;
-      --bg2: #fff7ed;
-      --panel: #ffffff;
-      --panel-soft: #f8fafc;
-      --text: #172033;
-      --muted: #6a7384;
-      --border: #d9deea;
-      --line: #dce2ec;
-      --p1: #2563eb;
-      --p2: #f97316;
-      --pc: #7c3aed;
-      --success-bg: #ecfdf5;
-      --success-border: #bbf7d0;
-      --success-text: #166534;
-      --shadow: 0 12px 30px rgba(22, 32, 51, 0.12);
+      --bg: #f3efe5;
+      --paper: #fffdf7;
+      --panel: #fffaf1;
+      --soft: #f8f1e4;
+      --ink: #171717;
+      --muted: #70675b;
+      --border: #d7cbbb;
+      --line: #2f2f2f;
+      --dot: #111;
+      --shadow: 0 18px 40px rgba(42, 31, 12, 0.14);
     }
 
     body.dark {
-      --bg: #080c14;
-      --bg2: #131827;
-      --panel: #111827;
-      --panel-soft: #0b1220;
-      --text: #f8fafc;
-      --muted: #a7b0c2;
-      --border: #263244;
-      --line: #2d3748;
-      --success-bg: #052e20;
-      --success-border: #14532d;
-      --success-text: #bbf7d0;
-      --shadow: 0 14px 34px rgba(0, 0, 0, 0.42);
+      --bg: #0d0d0d;
+      --paper: #171717;
+      --panel: #151515;
+      --soft: #101010;
+      --ink: #f4f4f4;
+      --muted: #aaa39a;
+      --border: #333;
+      --line: #e7e7e7;
+      --dot: #fff;
+      --shadow: 0 18px 42px rgba(0, 0, 0, 0.46);
     }
 
     * { box-sizing: border-box; }
@@ -44,36 +37,44 @@
       margin: 0;
       width: 100%;
       height: 100%;
+      overflow: hidden;
+      color: var(--ink);
+      background: var(--bg);
       font-family: Arial, Helvetica, sans-serif;
-      color: var(--text);
-      background: linear-gradient(135deg, var(--bg) 0%, var(--bg) 52%, var(--bg2) 100%);
     }
 
-    body { overflow: hidden; }
+    body {
+      background-image:
+        linear-gradient(90deg, rgba(120, 110, 90, 0.06) 1px, transparent 1px),
+        linear-gradient(rgba(120, 110, 90, 0.06) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+
+    body.dark {
+      background-image:
+        linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px),
+        linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px);
+    }
+
+    button, input, select { font: inherit; }
 
     .app {
       width: 100vw;
       height: 100vh;
-      padding: 12px;
+      padding: 10px;
       display: grid;
-      grid-template-columns: minmax(0, 1fr) 330px;
+      grid-template-columns: minmax(0, 1fr) 310px;
       gap: 12px;
-      overflow: hidden;
-      transition: grid-template-columns 0.2s ease;
     }
 
-    .app.panel-hidden {
-      grid-template-columns: minmax(0, 1fr) 0;
-      gap: 0;
-    }
+    .app.panel-hidden { grid-template-columns: minmax(0, 1fr) 0; gap: 0; }
 
-    .game-area,
-    .side-panel {
+    .game-area, .side-panel {
+      min-height: 0;
       background: var(--panel);
       border: 1px solid var(--border);
       border-radius: 22px;
       box-shadow: var(--shadow);
-      min-height: 0;
     }
 
     .game-area {
@@ -87,603 +88,224 @@
 
     .top-bar {
       display: grid;
-      grid-template-columns: auto minmax(230px, 440px) auto;
+      grid-template-columns: auto minmax(220px, 1fr) auto;
       align-items: center;
       gap: 10px;
     }
 
-    h1 {
-      margin: 0;
-      font-size: clamp(22px, 2.4vw, 38px);
-      letter-spacing: -0.04em;
-      white-space: nowrap;
-    }
+    h1 { margin: 0; font-size: clamp(24px, 2.4vw, 36px); letter-spacing: -0.05em; }
 
     .turn-pill {
+      justify-self: center;
+      width: min(100%, 480px);
+      min-height: 48px;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 12px;
-      padding: 13px 18px;
-      border-radius: 20px;
-      background: linear-gradient(135deg, color-mix(in srgb, var(--p1) 18%, var(--panel)), var(--panel-soft));
-      border: 2px solid color-mix(in srgb, var(--p1) 40%, var(--border));
-      font-size: 20px;
+      gap: 10px;
+      padding: 10px 16px;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      background: var(--soft);
       font-weight: 900;
-      box-shadow: 0 10px 24px rgba(37, 99, 235, 0.16);
-      text-align: center;
-      min-height: 60px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
-    .top-actions {
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
-    }
-
-    .icon-btn {
-      width: auto;
-      min-width: 105px;
-      padding: 11px 14px;
-      border-radius: 14px;
-      font-size: 14px;
-      white-space: nowrap;
-    }
-
-    .turn-dot {
-      width: 21px;
-      height: 21px;
+    .turn-dot, .color-chip {
+      width: 13px;
+      height: 13px;
       border-radius: 50%;
-      background: var(--p1);
-      box-shadow: 0 0 0 7px rgba(37, 99, 235, 0.16);
+      background: var(--ink);
       flex: 0 0 auto;
     }
 
     .scores-top {
       display: grid;
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 10px;
-    }
-
-    .score-card.is-hidden,
-    .player-card.is-hidden {
-      display: none;
+      gap: 8px;
     }
 
     .score-card {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      gap: 10px;
-      padding: 12px 14px;
-      border: 1px solid var(--border);
-      background: var(--panel-soft);
-      border-radius: 18px;
-      font-weight: 900;
-      font-size: 18px;
-    }
-
-    .score-card .left {
-      display: flex;
       align-items: center;
-      gap: 10px;
-      min-width: 0;
+      gap: 8px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--soft);
+      font-weight: 900;
     }
 
-    .score-card .score-value {
-      font-size: 30px;
-      line-height: 1;
-    }
-
-    .color-chip {
-      width: 14px;
-      height: 14px;
-      border-radius: 50%;
-      flex: 0 0 auto;
-      background: var(--p1);
-    }
+    .score-card .left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+    .score-card .left span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .score-value { font-size: 26px; line-height: 1; }
+    .is-hidden { display: none !important; }
 
     .board-wrap {
       min-height: 0;
+      overflow: hidden;
       display: grid;
       place-items: center;
-      padding: 8px;
+      padding: 10px;
+      border: 1px solid var(--border);
       border-radius: 18px;
-      background: radial-gradient(circle at top left, color-mix(in srgb, var(--panel) 96%, white) 0, var(--panel-soft) 62%, var(--bg) 100%);
-      overflow: auto;
-      scrollbar-width: thin;
-      scrollbar-color: var(--muted) transparent;
-    }
-
-    .board-wrap::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-
-    .board-wrap::-webkit-scrollbar-thumb {
-      background: var(--muted);
-      border-radius: 999px;
+      background: var(--soft);
+      touch-action: none;
     }
 
     #board {
+      display: block;
       width: 100%;
       height: 100%;
       max-width: 100%;
       max-height: 100%;
-      box-sizing: border-box;
-      border-radius: 16px;
-      background: var(--panel);
+      min-width: 120px;
+      min-height: 120px;
+      background: var(--paper);
       border: 1px solid var(--border);
-      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06), 0 14px 36px rgba(22,32,51,0.10);
-      touch-action: manipulation;
-      display: block;
-      flex: 0 0 auto;
+      border-radius: 14px;
+      touch-action: none;
     }
 
     .side-panel {
       padding: 14px;
+      overflow-y: auto;
       display: flex;
       flex-direction: column;
       gap: 10px;
-      overflow-y: auto;
-      overflow-x: hidden;
-      max-height: 100%;
-      min-height: 0;
-      scrollbar-width: thin;
-      scrollbar-color: var(--muted) transparent;
-      transition: transform 0.22s ease, opacity 0.18s ease;
+      transition: opacity .18s ease, transform .18s ease, padding .18s ease;
     }
 
     .app.panel-hidden .side-panel {
-      transform: translateX(30px);
       opacity: 0;
+      transform: translateX(30px);
       pointer-events: none;
-      overflow: hidden;
       padding: 0;
       border: 0;
-    }
-
-    .side-panel::-webkit-scrollbar { width: 8px; }
-    .side-panel::-webkit-scrollbar-track { background: transparent; }
-    .side-panel::-webkit-scrollbar-thumb {
-      background: var(--muted);
-      border-radius: 999px;
+      overflow: hidden;
     }
 
     .card {
-      flex: 0 0 auto;
-      border: 1px solid var(--border);
-      background: var(--panel);
-      border-radius: 18px;
       padding: 12px;
-      min-height: 0;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--panel);
     }
 
-    .card h2 {
-      margin: 0 0 9px;
-      font-size: 16px;
-    }
-
-    .controls {
-      display: grid;
-      gap: 8px;
-    }
+    .card h2 { margin: 0 0 10px; font-size: 16px; }
+    .controls, .player-settings { display: grid; gap: 9px; }
+    .compact-row, .player-type-row, .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 
     label {
       display: grid;
-      gap: 4px;
+      gap: 5px;
       color: var(--muted);
       font-size: 11px;
-      font-weight: 800;
+      font-weight: 900;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.06em;
     }
 
-    input,
-    select,
-    button {
+    input, select {
       width: 100%;
+      min-height: 38px;
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 9px 10px;
-      font: inherit;
-      background: var(--panel-soft);
-      color: var(--text);
+      padding: 8px 10px;
+      color: var(--ink);
+      background: var(--soft);
       outline: none;
     }
 
-    input[type="color"] {
-      height: 42px;
-      padding: 4px;
-      cursor: pointer;
-    }
-
-    input:focus,
-    select:focus {
-      border-color: var(--p1);
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
-    }
+    input[type="color"] { padding: 4px; }
 
     button {
-      cursor: pointer;
-      border: 0;
+      width: 100%;
+      min-height: 42px;
+      border: 1px solid var(--ink);
+      border-radius: 14px;
+      background: var(--ink);
+      color: var(--paper);
       font-weight: 900;
-      background: var(--text);
-      color: var(--panel);
-      transition: transform 0.15s ease, opacity 0.15s ease;
+      cursor: pointer;
     }
 
-    body.dark button {
-      background: #e5e7eb;
-      color: #0f172a;
-    }
+    .secondary { background: transparent; color: var(--ink); border-color: var(--border); }
+    .icon-btn { min-width: 110px; width: auto; }
 
-    button:hover { transform: translateY(-1px); }
-    button:active { transform: translateY(0); opacity: 0.85; }
-
-    .secondary {
-      background: var(--panel-soft);
-      color: var(--text);
-      border: 1px solid var(--border);
-    }
-
-    body.dark .secondary {
-      background: #1f2937;
-      color: #f8fafc;
-    }
-
-    .compact-row,
-    .stats-grid,
-    .player-type-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-    }
-
-    .player-settings {
-      display: grid;
-      gap: 8px;
-    }
-
-    .player-card {
-      display: grid;
-      gap: 8px;
+    .player-card, .stat {
       padding: 10px;
       border: 1px solid var(--border);
       border-radius: 14px;
-      background: var(--panel-soft);
+      background: var(--soft);
     }
 
     .player-card-title {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
       font-size: 12px;
       font-weight: 900;
       color: var(--muted);
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.06em;
     }
 
-    .stat {
-      padding: 9px;
-      border: 1px solid var(--border);
-      border-radius: 14px;
-      background: var(--panel-soft);
-    }
-
-    .stat span {
-      display: block;
-      color: var(--muted);
-      font-size: 11px;
-      margin-bottom: 4px;
-    }
-
-    .stat strong {
-      font-size: 21px;
-    }
+    .stat span { display: block; color: var(--muted); font-size: 11px; font-weight: 800; margin-bottom: 4px; }
+    .stat strong { font-size: 22px; }
+    .hint { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
 
     .overlay {
       position: absolute;
       inset: 0;
-      background: rgba(5, 10, 20, 0.55);
+      z-index: 20;
       display: none;
       align-items: center;
       justify-content: center;
-      z-index: 20;
       padding: 20px;
-      overflow: hidden;
+      background: rgba(0,0,0,0.55);
     }
 
-    .overlay.show {
-      display: flex;
-    }
+    .overlay.show { display: flex; }
 
     .winner-modal {
-      position: relative;
-      width: min(560px, 92vw);
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 24px;
-      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.35);
-      padding: 28px 22px 20px;
+      width: min(520px, 92vw);
+      padding: 24px;
       text-align: center;
-      z-index: 2;
-    }
-
-    .winner-emoji {
-      font-size: 52px;
-      margin-bottom: 8px;
-    }
-
-    .winner-title {
-      margin: 0;
-      font-size: clamp(24px, 4vw, 40px);
-      font-weight: 900;
-    }
-
-    .winner-subtitle {
-      margin: 10px 0 14px;
-      color: var(--muted);
-      font-size: 16px;
-      font-weight: 700;
-    }
-
-    .winner-score {
-      display: inline-block;
-      padding: 12px 18px;
-      border-radius: 16px;
-      background: var(--panel-soft);
+      border-radius: 22px;
       border: 1px solid var(--border);
-      font-size: 18px;
-      font-weight: 900;
-      margin-bottom: 18px;
+      background: var(--paper);
+      box-shadow: 0 28px 80px rgba(0,0,0,0.34);
     }
 
-    .winner-actions {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-
-    .winner-actions button {
-      min-width: 150px;
-    }
-
-    .celebration {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      overflow: hidden;
-      z-index: 1;
-    }
-
-    .confetti {
-      position: absolute;
-      width: 10px;
-      height: 18px;
-      top: -30px;
-      border-radius: 2px;
-      opacity: 0.95;
-      animation: confettiFall linear forwards;
-    }
-
-    @keyframes confettiFall {
-      0% {
-        transform: translateY(-40px) rotate(0deg);
-        opacity: 1;
-      }
-      100% {
-        transform: translateY(110vh) rotate(720deg);
-        opacity: 0.85;
-      }
-    }
+    .winner-emoji { font-size: 44px; margin-bottom: 8px; }
+    .winner-title { margin: 0; font-size: clamp(24px, 4vw, 38px); }
+    .winner-subtitle { margin: 10px 0 14px; color: var(--muted); font-weight: 700; }
+    .winner-score { display: inline-block; padding: 10px 14px; border: 1px solid var(--border); border-radius: 14px; background: var(--soft); font-weight: 900; margin-bottom: 16px; }
+    .winner-actions { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+    .winner-actions button { min-width: 140px; width: auto; }
 
     @media (max-width: 980px) {
-      .app,
-      .app.panel-hidden {
-        height: 100vh;
-        grid-template-columns: 1fr;
-        grid-template-rows: minmax(0, 1fr) minmax(0, 45vh);
-        gap: 8px;
-        overflow: hidden;
-      }
-
-      .app.panel-hidden {
-        grid-template-rows: 1fr 0;
-        gap: 0;
-        padding: 4px;
-      }
-
-      .app.panel-hidden .game-area {
-        padding: 4px;
-        border-radius: 14px;
-        grid-template-rows: auto auto minmax(0, 1fr);
-        gap: 4px;
-      }
-
-      .app.panel-hidden .turn-pill {
-        min-height: 38px;
-        padding: 6px 8px;
-        font-size: 13px;
-      }
-
-      .app.panel-hidden .scores-top {
-        gap: 4px;
-      }
-
-      .app.panel-hidden .score-card {
-        padding: 5px 7px;
-        font-size: 12px;
-        border-radius: 12px;
-      }
-
-      .app.panel-hidden .score-card .score-value {
-        font-size: 18px;
-      }
-
-      .app.panel-hidden .board-wrap {
-        padding: 4px;
-      }
-
-      .app.panel-hidden #board {
-        max-width: 100%;
-        max-height: 100%;
-      }
-
-      .game-area {
-        min-height: 0;
-        grid-template-rows: auto auto minmax(0, 1fr);
-      }
-
-      .side-panel {
-        min-height: 0;
-        max-height: 100%;
-        overflow-y: auto;
-        overflow-x: hidden;
-      }
-
-      .app.panel-hidden .side-panel {
-        transform: translateY(30px);
-        opacity: 0;
-        pointer-events: none;
-        padding: 0;
-        border: 0;
-      }
-
-      .top-bar {
-        grid-template-columns: 1fr auto;
-      }
-
-      h1 {
-        display: none;
-      }
-
-      .turn-pill {
-        grid-column: 1;
-        min-width: 0;
-        width: 100%;
-        font-size: 17px;
-        min-height: 54px;
-        padding: 10px 12px;
-      }
-
-      .top-actions {
-        grid-column: 2;
-      }
-
-      .icon-btn {
-        min-width: 82px;
-        padding: 10px 11px;
-        font-size: 13px;
-      }
-
-      .score-card {
-        padding: 9px 10px;
-        font-size: 15px;
-      }
-
-      .score-card .score-value {
-        font-size: 24px;
-      }
-
-      #board {
-        max-width: 100%;
-        max-height: 100%;
-      }
+      .app, .app.panel-hidden { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr) minmax(0, 43vh); padding: 8px; gap: 8px; }
+      .app.panel-hidden { grid-template-rows: minmax(0, 1fr) 0; padding: 4px; gap: 0; }
+      .top-bar { grid-template-columns: 1fr auto; }
+      h1 { display: none; }
+      .game-area { padding: 8px; gap: 7px; border-radius: 18px; }
+      .turn-pill { justify-self: stretch; min-height: 40px; font-size: 12px; }
+      .icon-btn { min-width: 84px; min-height: 38px; font-size: 12px; }
+      .score-card { padding: 7px 8px; font-size: 12px; border-radius: 12px; }
+      .score-value { font-size: 18px; }
+      .board-wrap { padding: 5px; }
+      .app.panel-hidden .side-panel { transform: translateY(24px); }
     }
 
     @media (max-width: 560px) {
-      .app,
-      .app.panel-hidden {
-        padding: 6px;
-      }
-
-      .app {
-        grid-template-rows: minmax(0, 1fr) minmax(0, 46vh);
-      }
-
-      .app.panel-hidden {
-        grid-template-rows: 1fr 0;
-        padding: 3px;
-      }
-
-      .app.panel-hidden .game-area {
-        padding: 3px;
-        gap: 3px;
-      }
-
-      .app.panel-hidden .turn-pill {
-        min-height: 34px;
-        font-size: 12px;
-      }
-
-      .app.panel-hidden .score-card {
-        padding: 4px 6px;
-        font-size: 11px;
-      }
-
-      .app.panel-hidden .score-card .score-value {
-        font-size: 16px;
-      }
-
-      .app.panel-hidden #board {
-        max-width: 100%;
-        max-height: 100%;
-      }
-
-      .game-area,
-      .side-panel {
-        border-radius: 18px;
-        padding: 10px;
-      }
-
-      .game-area {
-        gap: 7px;
-      }
-
-      .turn-pill {
-        font-size: 15px;
-        min-height: 48px;
-      }
-
-      .turn-dot {
-        width: 16px;
-        height: 16px;
-      }
-
-      .icon-btn {
-        min-width: 74px;
-        padding: 9px 9px;
-        font-size: 12px;
-      }
-
-      .score-card {
-        font-size: 13px;
-        padding: 8px 9px;
-      }
-
-      .score-card .score-value {
-        font-size: 21px;
-      }
-
-      .color-chip {
-        width: 11px;
-        height: 11px;
-      }
-
-      .compact-row,
-      .stats-grid,
-      .scores-top,
-      .player-type-row {
-        grid-template-columns: 1fr 1fr;
-      }
-
-      .board-wrap {
-        padding: 5px;
-      }
+      .app { padding: 5px; grid-template-rows: minmax(0, 1fr) minmax(0, 46vh); }
+      .app.panel-hidden { padding: 3px; }
+      .game-area { padding: 6px; }
+      .turn-pill { min-height: 34px; font-size: 11px; }
+      .scores-top, .compact-row, .player-type-row, .stats-grid { grid-template-columns: 1fr 1fr; }
+      .score-card { padding: 6px; font-size: 11px; }
+      .score-value { font-size: 16px; }
     }
   </style>
 </head>
@@ -692,64 +314,26 @@
     <section class="game-area">
       <div class="top-bar">
         <h1>Dots & Boxes</h1>
-        <div class="turn-pill" aria-live="polite">
-          <span class="turn-dot" id="turnDot"></span>
-          <span id="turnText">TURN: Player 1</span>
-        </div>
-        <div class="top-actions">
-          <button id="togglePanelBtn" class="icon-btn secondary">Hide Options</button>
-        </div>
+        <div class="turn-pill" aria-live="polite"><span class="turn-dot" id="turnDot"></span><span id="turnText">TURN: Player 1</span></div>
+        <div class="top-actions"><button id="togglePanelBtn" class="icon-btn secondary">Hide Options</button></div>
       </div>
 
-      <section class="scores-top" id="scoresTop" aria-label="Scores">
-        <div class="score-card" id="scoreCard1">
-          <div class="left">
-            <span class="color-chip" id="p1Chip"></span>
-            <span id="p1ScoreName">Player 1</span>
-          </div>
-          <span class="score-value" id="p1Score">0</span>
-        </div>
-
-        <div class="score-card" id="scoreCard2">
-          <div class="left">
-            <span class="color-chip" id="p2Chip"></span>
-            <span id="p2ScoreName">Player 2</span>
-          </div>
-          <span class="score-value" id="p2Score">0</span>
-        </div>
-
-        <div class="score-card is-hidden" id="scoreCard3">
-          <div class="left">
-            <span class="color-chip" id="p3Chip"></span>
-            <span id="p3ScoreName">Player 3</span>
-          </div>
-          <span class="score-value" id="p3Score">0</span>
-        </div>
-
-        <div class="score-card is-hidden" id="scoreCard4">
-          <div class="left">
-            <span class="color-chip" id="p4Chip"></span>
-            <span id="p4ScoreName">Player 4</span>
-          </div>
-          <span class="score-value" id="p4Score">0</span>
-        </div>
+      <section class="scores-top" aria-label="Scores">
+        <div class="score-card" id="scoreCard1"><div class="left"><span class="color-chip" id="p1Chip"></span><span id="p1ScoreName">Player 1</span></div><span class="score-value" id="p1Score">0</span></div>
+        <div class="score-card" id="scoreCard2"><div class="left"><span class="color-chip" id="p2Chip"></span><span id="p2ScoreName">Player 2</span></div><span class="score-value" id="p2Score">0</span></div>
+        <div class="score-card is-hidden" id="scoreCard3"><div class="left"><span class="color-chip" id="p3Chip"></span><span id="p3ScoreName">Player 3</span></div><span class="score-value" id="p3Score">0</span></div>
+        <div class="score-card is-hidden" id="scoreCard4"><div class="left"><span class="color-chip" id="p4Chip"></span><span id="p4ScoreName">Player 4</span></div><span class="score-value" id="p4Score">0</span></div>
       </section>
 
-      <div class="board-wrap">
-        <canvas id="board" width="900" height="900" aria-label="Dots and Boxes game board"></canvas>
-      </div>
+      <div class="board-wrap"><canvas id="board" aria-label="Dots and Boxes board"></canvas></div>
 
       <div class="overlay" id="winnerOverlay">
-        <div class="celebration" id="celebration"></div>
         <div class="winner-modal">
           <div class="winner-emoji" id="winnerEmoji">🎉</div>
           <h2 class="winner-title" id="winnerTitle">Winner!</h2>
           <p class="winner-subtitle" id="winnerSubtitle">Great game.</p>
           <div class="winner-score" id="winnerScoreText">Player 1 0 - 0 PC</div>
-          <div class="winner-actions">
-            <button id="playAgainBtn">Play Again</button>
-            <button id="closeWinnerBtn" class="secondary">Close</button>
-          </div>
+          <div class="winner-actions"><button id="playAgainBtn">Play Again</button><button id="closeWinnerBtn" class="secondary">Close</button></div>
         </div>
       </div>
     </section>
@@ -759,173 +343,34 @@
         <h2>Game Setup</h2>
         <div class="controls">
           <div class="compact-row">
-            <label>
-              Rows
-              <select id="rowsSelect">
-                <option value="3">3 rows</option>
-                <option value="4">4 rows</option>
-                <option value="5">5 rows</option>
-                <option value="6">6 rows</option>
-                <option value="8" selected>8 rows</option>
-                <option value="10">10 rows</option>
-                <option value="12">12 rows</option>
-                <option value="14">14 rows</option>
-                <option value="16">16 rows</option>
-                <option value="18">18 rows</option>
-                <option value="20">20 rows</option>
-                <option value="24">24 rows</option>
-                <option value="30">30 rows</option>
-              </select>
-            </label>
-
-            <label>
-              Columns
-              <select id="colsSelect">
-                <option value="3">3 columns</option>
-                <option value="4">4 columns</option>
-                <option value="5">5 columns</option>
-                <option value="6">6 columns</option>
-                <option value="8" selected>8 columns</option>
-                <option value="10">10 columns</option>
-                <option value="12">12 columns</option>
-                <option value="14">14 columns</option>
-                <option value="16">16 columns</option>
-                <option value="18">18 columns</option>
-                <option value="20">20 columns</option>
-                <option value="24">24 columns</option>
-                <option value="30">30 columns</option>
-              </select>
-            </label>
+            <label>Rows<select id="rowsSelect"><option value="3">3 rows</option><option value="4">4 rows</option><option value="5">5 rows</option><option value="6">6 rows</option><option value="8" selected>8 rows</option><option value="10">10 rows</option><option value="12">12 rows</option><option value="14">14 rows</option><option value="16">16 rows</option><option value="18">18 rows</option><option value="20">20 rows</option><option value="24">24 rows</option><option value="30">30 rows</option></select></label>
+            <label>Columns<select id="colsSelect"><option value="3">3 columns</option><option value="4">4 columns</option><option value="5">5 columns</option><option value="6">6 columns</option><option value="8" selected>8 columns</option><option value="10">10 columns</option><option value="12">12 columns</option><option value="14">14 columns</option><option value="16">16 columns</option><option value="18">18 columns</option><option value="20">20 columns</option><option value="24">24 columns</option><option value="30">30 columns</option></select></label>
           </div>
 
           <div class="compact-row">
-            <label>
-              Theme
-              <select id="themeSelect">
-                <option value="light">Light</option>
-                <option value="dark" selected>Dark</option>
-              </select>
-            </label>
-
-            <label>
-              Start With Random Lines
-              <select id="startingLinesSelect">
-                <option value="0" selected>None</option>
-                <option value="10">10% random lines</option>
-                <option value="20">20% random lines</option>
-                <option value="30">30% random lines</option>
-                <option value="40">40% random lines</option>
-                <option value="50">50% random lines</option>
-              </select>
-            </label>
+            <label>Theme<select id="themeSelect"><option value="light">Paper Light</option><option value="dark" selected>Paper Dark</option></select></label>
+            <label>Starting Lines<select id="startingLinesSelect"><option value="0" selected>None</option><option value="10">10% pencil lines</option><option value="20">20% pencil lines</option><option value="30">30% pencil lines</option></select></label>
           </div>
 
-          <label>
-            Number of Players
-            <select id="playerCountSelect">
-              <option value="2" selected>2 players</option>
-              <option value="3">3 players</option>
-              <option value="4">4 players</option>
-            </select>
-          </label>
+          <label>Number of Players<select id="playerCountSelect"><option value="2" selected>2 players</option><option value="3">3 players</option><option value="4">4 players</option></select></label>
 
-          <div class="player-settings" id="playerSettings">
-            <div class="player-card" id="playerCard1">
-              <div class="player-card-title">Player 1</div>
-              <div class="player-type-row">
-                <label>
-                  Type
-                  <select id="p1Type" disabled>
-                    <option value="human" selected>Human</option>
-                  </select>
-                </label>
-                <label>
-                  Color
-                  <input id="p1Color" type="color" value="#2563eb" />
-                </label>
-              </div>
-              <label>
-                Name
-                <input id="p1Name" value="Player 1" maxlength="18" />
-              </label>
-            </div>
-
-            <div class="player-card" id="playerCard2">
-              <div class="player-card-title">Player 2</div>
-              <div class="player-type-row">
-                <label>
-                  Type
-                  <select id="p2Type">
-                    <option value="human">Human</option>
-                    <option value="pc" selected>PC</option>
-                  </select>
-                </label>
-                <label>
-                  Color
-                  <input id="p2Color" type="color" value="#7c3aed" />
-                </label>
-              </div>
-              <label>
-                Name
-                <input id="p2Name" value="PC" maxlength="18" />
-              </label>
-            </div>
-
-            <div class="player-card is-hidden" id="playerCard3">
-              <div class="player-card-title">Player 3</div>
-              <div class="player-type-row">
-                <label>
-                  Type
-                  <select id="p3Type" disabled>
-                    <option value="human" selected>Human</option>
-                  </select>
-                </label>
-                <label>
-                  Color
-                  <input id="p3Color" type="color" value="#f97316" />
-                </label>
-              </div>
-              <label>
-                Name
-                <input id="p3Name" value="Player 3" maxlength="18" />
-              </label>
-            </div>
-
-            <div class="player-card is-hidden" id="playerCard4">
-              <div class="player-card-title">Player 4</div>
-              <div class="player-type-row">
-                <label>
-                  Type
-                  <select id="p4Type" disabled>
-                    <option value="human" selected>Human</option>
-                  </select>
-                </label>
-                <label>
-                  Color
-                  <input id="p4Color" type="color" value="#22c55e" />
-                </label>
-              </div>
-              <label>
-                Name
-                <input id="p4Name" value="Player 4" maxlength="18" />
-              </label>
-            </div>
+          <div class="player-settings">
+            <div class="player-card" id="playerCard1"><div class="player-card-title">Player 1</div><div class="player-type-row"><label>Type<select id="p1Type" disabled><option value="human" selected>Human</option></select></label><label>Box Color<input id="p1Color" type="color" value="#2563eb" /></label></div><label>Name<input id="p1Name" value="Player 1" maxlength="18" /></label></div>
+            <div class="player-card" id="playerCard2"><div class="player-card-title">Player 2</div><div class="player-type-row"><label>Type<select id="p2Type"><option value="human">Human</option><option value="pc" selected>PC</option></select></label><label>Box Color<input id="p2Color" type="color" value="#f97316" /></label></div><label>Name<input id="p2Name" value="PC" maxlength="18" /></label></div>
+            <div class="player-card is-hidden" id="playerCard3"><div class="player-card-title">Player 3</div><div class="player-type-row"><label>Type<select id="p3Type" disabled><option value="human" selected>Human</option></select></label><label>Box Color<input id="p3Color" type="color" value="#22c55e" /></label></div><label>Name<input id="p3Name" value="Player 3" maxlength="18" /></label></div>
+            <div class="player-card is-hidden" id="playerCard4"><div class="player-card-title">Player 4</div><div class="player-type-row"><label>Type<select id="p4Type" disabled><option value="human" selected>Human</option></select></label><label>Box Color<input id="p4Color" type="color" value="#a855f7" /></label></div><label>Name<input id="p4Name" value="Player 4" maxlength="18" /></label></div>
           </div>
 
           <button id="newGameBtn">New Game</button>
           <button id="startHideBtn" class="secondary">Start & Hide Options</button>
           <button id="resetStatsBtn" class="secondary">Reset Statistics</button>
+          <p class="hint">Mobile control: tap one dot, then tap an adjacent dot to draw the pencil line. Colors only appear after a box is completed.</p>
         </div>
       </section>
 
       <section class="card">
         <h2>Statistics</h2>
-        <div class="stats-grid">
-          <div class="stat"><span>Games</span><strong id="gamesPlayed">0</strong></div>
-          <div class="stat"><span>Drawn</span><strong id="drawnLines">0</strong></div>
-          <div class="stat"><span>Remaining</span><strong id="remainingLines">0</strong></div>
-          <div class="stat"><span>Boxes Left</span><strong id="boxesLeft">0</strong></div>
-        </div>
+        <div class="stats-grid"><div class="stat"><span>Games</span><strong id="gamesPlayed">0</strong></div><div class="stat"><span>Drawn</span><strong id="drawnLines">0</strong></div><div class="stat"><span>Remaining</span><strong id="remainingLines">0</strong></div><div class="stat"><span>Boxes Left</span><strong id="boxesLeft">0</strong></div></div>
       </section>
     </aside>
   </main>
@@ -935,329 +380,137 @@
     const boardWrap = document.querySelector('.board-wrap');
     const ctx = canvas.getContext('2d');
 
+    const $ = id => document.getElementById(id);
     const els = {
-      app: document.getElementById('app'),
-      rowsSelect: document.getElementById('rowsSelect'),
-      colsSelect: document.getElementById('colsSelect'),
-      themeSelect: document.getElementById('themeSelect'),
-      startingLinesSelect: document.getElementById('startingLinesSelect'),
-      playerCountSelect: document.getElementById('playerCountSelect'),
-      playerCards: [1, 2, 3, 4].map(n => document.getElementById(`playerCard${n}`)),
-      playerTypes: [1, 2, 3, 4].map(n => document.getElementById(`p${n}Type`)),
-      playerNames: [1, 2, 3, 4].map(n => document.getElementById(`p${n}Name`)),
-      playerColors: [1, 2, 3, 4].map(n => document.getElementById(`p${n}Color`)),
-      newGameBtn: document.getElementById('newGameBtn'),
-      startHideBtn: document.getElementById('startHideBtn'),
-      resetStatsBtn: document.getElementById('resetStatsBtn'),
-      togglePanelBtn: document.getElementById('togglePanelBtn'),
-      turnDot: document.getElementById('turnDot'),
-      turnText: document.getElementById('turnText'),
-      scoreCards: [1, 2, 3, 4].map(n => document.getElementById(`scoreCard${n}`)),
-      scoreChips: [1, 2, 3, 4].map(n => document.getElementById(`p${n}Chip`)),
-      scoreNames: [1, 2, 3, 4].map(n => document.getElementById(`p${n}ScoreName`)),
-      scoreValues: [1, 2, 3, 4].map(n => document.getElementById(`p${n}Score`)),
-      gamesPlayed: document.getElementById('gamesPlayed'),
-      drawnLines: document.getElementById('drawnLines'),
-      remainingLines: document.getElementById('remainingLines'),
-      boxesLeft: document.getElementById('boxesLeft'),
-      winnerOverlay: document.getElementById('winnerOverlay'),
-      winnerTitle: document.getElementById('winnerTitle'),
-      winnerSubtitle: document.getElementById('winnerSubtitle'),
-      winnerScoreText: document.getElementById('winnerScoreText'),
-      winnerEmoji: document.getElementById('winnerEmoji'),
-      celebration: document.getElementById('celebration'),
-      playAgainBtn: document.getElementById('playAgainBtn'),
-      closeWinnerBtn: document.getElementById('closeWinnerBtn')
+      app: $('app'), rowsSelect: $('rowsSelect'), colsSelect: $('colsSelect'), themeSelect: $('themeSelect'), startingLinesSelect: $('startingLinesSelect'), playerCountSelect: $('playerCountSelect'),
+      playerCards: [1,2,3,4].map(n => $(`playerCard${n}`)), playerTypes: [1,2,3,4].map(n => $(`p${n}Type`)), playerNames: [1,2,3,4].map(n => $(`p${n}Name`)), playerColors: [1,2,3,4].map(n => $(`p${n}Color`)),
+      newGameBtn: $('newGameBtn'), startHideBtn: $('startHideBtn'), resetStatsBtn: $('resetStatsBtn'), togglePanelBtn: $('togglePanelBtn'), turnDot: $('turnDot'), turnText: $('turnText'),
+      scoreCards: [1,2,3,4].map(n => $(`scoreCard${n}`)), scoreChips: [1,2,3,4].map(n => $(`p${n}Chip`)), scoreNames: [1,2,3,4].map(n => $(`p${n}ScoreName`)), scoreValues: [1,2,3,4].map(n => $(`p${n}Score`)),
+      gamesPlayed: $('gamesPlayed'), drawnLines: $('drawnLines'), remainingLines: $('remainingLines'), boxesLeft: $('boxesLeft'), winnerOverlay: $('winnerOverlay'), winnerTitle: $('winnerTitle'), winnerSubtitle: $('winnerSubtitle'), winnerScoreText: $('winnerScoreText'), winnerEmoji: $('winnerEmoji'), playAgainBtn: $('playAgainBtn'), closeWinnerBtn: $('closeWinnerBtn')
     };
 
-    const colors = {
-      players: [
-        localStorage.getItem('dotsBoxesP1Color') || '#2563eb',
-        localStorage.getItem('dotsBoxesP2Color') || '#7c3aed',
-        localStorage.getItem('dotsBoxesP3Color') || '#f97316',
-        localStorage.getItem('dotsBoxesP4Color') || '#22c55e'
-      ],
-      starter: '#00e5dc',
-      hoverLight: '#111827',
-      hoverDark: '#f8fafc',
-      dotLight: '#172033',
-      dotDark: '#e5e7eb',
-      gridLight: '#dce2ec',
-      gridDark: '#2d3748'
-    };
-
+    const colors = { players: ['#2563eb', '#f97316', '#22c55e', '#a855f7'] };
     let state;
-    let stats = JSON.parse(
-      localStorage.getItem('dotsBoxesStats') ||
-      '{"gamesPlayed":0,"p1Wins":0,"p2Wins":0,"draws":0}'
-    );
+    let selectedDot = null;
+    let stats = JSON.parse(localStorage.getItem('dotsBoxesStats') || '{"gamesPlayed":0,"wins":{},"draws":0}');
 
-    function isDark() {
-      return document.body.classList.contains('dark');
-    }
-
-    function getPlayerCount() {
-      return Number(els.playerCountSelect.value || 2);
-    }
-
-    function defaultPlayerName(index, type) {
-      if (type === 'pc') {
-        const pcNumber = els.playerTypes.slice(0, index + 1).filter(select => select.value === 'pc').length;
-        return `PC ${pcNumber}`;
-      }
-      return `Player ${index + 1}`;
-    }
+    function cssVar(name) { return getComputedStyle(document.body).getPropertyValue(name).trim(); }
+    function isDark() { return document.body.classList.contains('dark'); }
+    function hexToRgba(hex, a) { const v = hex.replace('#',''); const r = parseInt(v.slice(0,2),16); const g = parseInt(v.slice(2,4),16); const b = parseInt(v.slice(4,6),16); return `rgba(${r}, ${g}, ${b}, ${a})`; }
+    function saveStats() { localStorage.setItem('dotsBoxesStats', JSON.stringify(stats)); }
+    function getPlayerCount() { return Number(els.playerCountSelect.value || 2); }
+    function playerColor(i) { return colors.players[i] || colors.players[0]; }
+    function getInitial(name) { return String(name || '?').trim().charAt(0).toUpperCase() || '?'; }
 
     function getPlayers() {
       const count = getPlayerCount();
       const players = [];
-
       for (let i = 0; i < count; i++) {
         const type = els.playerTypes[i].value;
-        const fallback = defaultPlayerName(i, type);
-        const name = els.playerNames[i].value.trim() || fallback;
-        players.push({ name, type, color: colors.players[i] });
+        const name = els.playerNames[i].value.trim() || (type === 'pc' ? 'PC' : `Player ${i + 1}`);
+        players.push({ name, type, color: playerColor(i) });
       }
-
       return players;
     }
 
-    function getNames() {
-      return getPlayers().map(player => player.name);
-    }
-
-    function playerColor(index) {
-      return colors.players[index] || colors.players[0];
-    }
-
-    function nextPlayerIndex(from = state.current) {
-      return (from + 1) % state.players.length;
-    }
-
-    function syncPlayerSetupVisibility() {
+    function syncPlayers() {
       const count = getPlayerCount();
-
-      els.playerCards.forEach((card, index) => {
-        card.classList.toggle('is-hidden', index >= count);
-      });
-
-      els.scoreCards.forEach((card, index) => {
-        card.classList.toggle('is-hidden', index >= count);
-      });
-
-      // Rules:
-      // - PC is only allowed in a 2-player Human vs PC game.
-      // - Player 1 is always human, so PC vs PC can never happen.
-      // - 3-player and 4-player games are human-only.
+      els.playerCards.forEach((card, i) => card.classList.toggle('is-hidden', i >= count));
+      els.scoreCards.forEach((card, i) => card.classList.toggle('is-hidden', i >= count));
       els.playerTypes[0].value = 'human';
       els.playerTypes[0].disabled = true;
-
-      els.playerTypes.forEach((typeSelect, index) => {
-        if (index === 0) return;
-
-        const pcOption = Array.from(typeSelect.options).find(option => option.value === 'pc');
-        const canBePc = count === 2 && index === 1;
-
-        if (pcOption) pcOption.disabled = !canBePc;
-
-        if (!canBePc && typeSelect.value === 'pc') {
-          typeSelect.value = 'human';
-        }
-
-        typeSelect.disabled = !canBePc;
+      els.playerTypes.forEach((select, i) => {
+        if (i === 0) return;
+        const pcOption = Array.from(select.options).find(o => o.value === 'pc');
+        const canPc = count === 2 && i === 1;
+        if (pcOption) pcOption.disabled = !canPc;
+        if (!canPc && select.value === 'pc') select.value = 'human';
+        select.disabled = !canPc;
       });
-
-      // Keep names readable when switching between Human vs PC and human-only multiplayer.
-      els.playerTypes.forEach((typeSelect, index) => {
-        const input = els.playerNames[index];
-        const current = input.value.trim();
-        const autoHuman = `Player ${index + 1}`;
-        const looksAutoPc = /^PC\s*\d*$/i.test(current);
-
-        if (typeSelect.value === 'pc' && (!current || current === autoHuman || looksAutoPc)) {
-          input.value = 'PC';
-        } else if (typeSelect.value === 'human' && (!current || looksAutoPc)) {
-          input.value = autoHuman;
-        }
-      });
-
-      if (state) updateUI();
     }
 
-    function getInitial(name) {
-      const clean = String(name || '?').trim();
-      return (clean[0] || '?').toUpperCase();
-    }
-
-    function newGame(incrementGames = true) {
-      syncPlayerSetupVisibility();
+    function newGame(increment = true) {
+      syncPlayers();
       const rows = Number(els.rowsSelect.value);
       const cols = Number(els.colsSelect.value);
-      const totalLines = (rows + 1) * cols + rows * (cols + 1);
       const players = getPlayers();
-
       state = {
-        rows,
-        cols,
-        boxes: rows,
-        dots: Math.max(rows, cols) + 1,
+        rows, cols, players, names: players.map(p => p.name), current: 0,
         hLines: Array.from({ length: rows + 1 }, () => Array(cols).fill(null)),
         vLines: Array.from({ length: rows }, () => Array(cols + 1).fill(null)),
         owners: Array.from({ length: rows }, () => Array(cols).fill(null)),
-        current: 0,
-        players,
-        names: players.map(player => player.name),
-        scores: Array(players.length).fill(0),
-        drawnLines: 0,
-        totalLines,
-        hover: null,
-        lastMove: null,
-        lastMovePlayer: null,
-        gameOver: false
+        scores: Array(players.length).fill(0), drawnLines: 0,
+        totalLines: (rows + 1) * cols + rows * (cols + 1),
+        hoverDot: null, lastMove: null, gameOver: false
       };
-
+      selectedDot = null;
       addRandomStartingLines(Number(els.startingLinesSelect.value || 0));
-
-      if (incrementGames) {
-        stats.gamesPlayed += 1;
-        saveStats();
-      }
-
+      if (increment) { stats.gamesPlayed = (stats.gamesPlayed || 0) + 1; saveStats(); }
       hideWinnerOverlay();
-      setStatus('Start drawing lines between dots.');
-      resizeCanvasForDisplay();
-      updateUI();
-      draw();
-
-      if (!state.gameOver && isPcTurn()) {
-        setTimeout(pcMove, 350);
-      }
-    }
-
-    function saveStats() {
-      localStorage.setItem('dotsBoxesStats', JSON.stringify(stats));
-    }
-
-    function resetStats() {
-      stats = { gamesPlayed: 0, wins: {}, draws: 0 };
-      saveStats();
-      updateUI();
-      setStatus('Statistics reset. Current game continues.');
-    }
-
-    function setTheme(theme) {
-      document.body.classList.toggle('dark', theme === 'dark');
-      localStorage.setItem('dotsBoxesTheme', theme);
-      resizeCanvasForDisplay();
-      draw();
-    }
-
-    function setPanelHidden(hidden) {
-      els.app.classList.toggle('panel-hidden', hidden);
-      els.togglePanelBtn.textContent = hidden ? 'Show Options' : 'Hide Options';
-      localStorage.setItem('dotsBoxesPanelHidden', hidden ? 'yes' : 'no');
-      window.setTimeout(() => {
-        resizeCanvasForDisplay();
-        draw();
-      }, 240);
-    }
-
-    function applyPlayerColors() {
-      els.playerColors.forEach((input, index) => {
-        colors.players[index] = input.value;
-        localStorage.setItem(`dotsBoxesP${index + 1}Color`, colors.players[index]);
-      });
-
-      if (state) {
-        state.players.forEach((player, index) => {
-          player.color = colors.players[index];
-        });
-      }
-
-      updateUI();
-      draw();
+      requestAnimationFrame(() => { resizeCanvasForDisplay(); updateUI(); draw(); if (isPcTurn()) setTimeout(pcMove, 350); });
     }
 
     function resizeCanvasForDisplay() {
       if (!state) return;
-
       const wrapRect = boardWrap.getBoundingClientRect();
-      const wrapStyle = getComputedStyle(boardWrap);
-      const padX = parseFloat(wrapStyle.paddingLeft) + parseFloat(wrapStyle.paddingRight);
-      const padY = parseFloat(wrapStyle.paddingTop) + parseFloat(wrapStyle.paddingBottom);
-
-      const maxW = Math.max(120, wrapRect.width - padX);
-      const maxH = Math.max(120, wrapRect.height - padY);
+      const pad = 20;
+      const maxW = Math.max(180, wrapRect.width - pad);
+      const maxH = Math.max(180, wrapRect.height - pad);
       const boardRatio = state.cols / state.rows;
-      const wrapRatio = maxW / maxH;
-
-      let cssW;
-      let cssH;
-
-      if (wrapRatio > boardRatio) {
-        cssH = maxH;
-        cssW = cssH * boardRatio;
-      } else {
-        cssW = maxW;
-        cssH = cssW / boardRatio;
-      }
-
+      let cssW = maxW;
+      let cssH = cssW / boardRatio;
+      if (cssH > maxH) { cssH = maxH; cssW = cssH * boardRatio; }
       canvas.style.width = `${Math.floor(cssW)}px`;
       canvas.style.height = `${Math.floor(cssH)}px`;
-
-      const rect = canvas.getBoundingClientRect();
-      const ratio = window.devicePixelRatio || 1;
-      canvas.width = Math.max(1, Math.round(rect.width * ratio));
-      canvas.height = Math.max(1, Math.round(rect.height * ratio));
-      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.max(1, Math.round(cssW * dpr));
+      canvas.height = Math.max(1, Math.round(cssH * dpr));
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 
     function boardMetrics() {
       const rect = canvas.getBoundingClientRect();
-      const shortestSide = Math.min(rect.width, rect.height);
-
-      /*
-        Extra inner padding is important on mobile:
-        it keeps the outside dots and last horizontal/vertical lines away from
-        the rounded canvas border, so the final row/column is never clipped.
-      */
-      const padding = Math.max(14, Math.min(34, shortestSide * 0.055));
-      const usableW = Math.max(1, rect.width - padding * 2);
-      const usableH = Math.max(1, rect.height - padding * 2);
-
-      const step = Math.min(usableW / state.cols, usableH / state.rows);
+      const w = Math.max(1, rect.width);
+      const h = Math.max(1, rect.height);
+      const padding = Math.max(18, Math.min(42, Math.min(w, h) * 0.075));
+      const step = Math.min((w - padding * 2) / state.cols, (h - padding * 2) / state.rows);
       const boardW = step * state.cols;
       const boardH = step * state.rows;
-
-      return {
-        width: rect.width,
-        height: rect.height,
-        size: shortestSide,
-        padding,
-        step,
-        x0: (rect.width - boardW) / 2,
-        y0: (rect.height - boardH) / 2,
-        boardW,
-        boardH,
-        usable: Math.min(usableW, usableH)
-      };
-    }
-
-    function lineOwner(line) {
-      if (!line) return null;
-      if (line.player === 'starter') return colors.starter;
-      return playerColor(line.player);
+      return { width: w, height: h, padding, step, x0: (w - boardW) / 2, y0: (h - boardH) / 2, boardW, boardH };
     }
 
     function draw() {
       if (!state) return;
       const m = boardMetrics();
       ctx.clearRect(0, 0, m.width, m.height);
+      drawPaperLines(m);
       drawBoxes(m);
       drawLines(m);
-      drawHover(m);
+      drawPotentialLine(m);
       drawLastMove(m);
       drawDots(m);
+      drawSelectedDot(m);
+      drawHoverDot(m);
+    }
+
+    function drawPaperLines(m) {
+      ctx.save();
+      ctx.globalAlpha = isDark() ? 0.055 : 0.16;
+      ctx.strokeStyle = isDark() ? '#fff' : '#8b7b61';
+      ctx.lineWidth = 1;
+      const gap = 24;
+      for (let x = 0; x < m.width; x += gap) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, m.height); ctx.stroke(); }
+      for (let y = 0; y < m.height; y += gap) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(m.width, y); ctx.stroke(); }
+      ctx.restore();
+    }
+
+    function roundRect(x, y, w, h, r) {
+      r = Math.min(r, w / 2, h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.closePath();
     }
 
     function drawBoxes(m) {
@@ -1265,656 +518,290 @@
         for (let c = 0; c < state.cols; c++) {
           const owner = state.owners[r][c];
           if (owner === null) continue;
-
-          ctx.fillStyle = hexToRgba(playerColor(owner), 0.22);
-
-          ctx.fillRect(
-            m.x0 + c * m.step + 2,
-            m.y0 + r * m.step + 2,
-            Math.max(1, m.step - 4),
-            Math.max(1, m.step - 4)
-          );
-
-          if (m.step > 20) {
-            ctx.fillStyle = playerColor(owner);
-            ctx.font = `900 ${Math.max(11, m.step * 0.36)}px Arial`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            ctx.fillText(
-              getInitial(state.names[owner]),
-              m.x0 + (c + 0.5) * m.step,
-              m.y0 + (r + 0.5) * m.step
-            );
+          const color = playerColor(owner);
+          ctx.save();
+          ctx.fillStyle = hexToRgba(color, isDark() ? 0.24 : 0.16);
+          ctx.strokeStyle = hexToRgba(color, isDark() ? 0.55 : 0.34);
+          ctx.lineWidth = Math.max(1, m.step * 0.035);
+          const x = m.x0 + c * m.step + 3;
+          const y = m.y0 + r * m.step + 3;
+          const size = Math.max(1, m.step - 6);
+          roundRect(x, y, size, size, Math.max(4, m.step * 0.08));
+          ctx.fill(); ctx.stroke();
+          if (m.step > 22) {
+            ctx.fillStyle = color;
+            ctx.globalAlpha = isDark() ? 0.9 : 0.78;
+            ctx.font = `900 ${Math.max(11, m.step * 0.34)}px Arial`;
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText(getInitial(state.names[owner]), m.x0 + (c + 0.5) * m.step, m.y0 + (r + 0.5) * m.step);
           }
+          ctx.restore();
         }
       }
     }
 
     function drawLines(m) {
-      ctx.lineCap = 'round';
-      const baseLineWidth = Math.max(2, Math.min(6, m.step * 0.10));
-      const starterLineWidth = Math.max(5, Math.min(11, m.step * 0.18));
-
-      function applyLineStyle(line) {
-        const ownerColor = lineOwner(line);
-        const isStarter = line && line.player === 'starter';
-
-        ctx.strokeStyle = ownerColor || (isDark() ? colors.gridDark : colors.gridLight);
-        ctx.globalAlpha = ownerColor ? 1 : (isDark() ? 0.82 : 1);
-        ctx.lineWidth = isStarter ? starterLineWidth : baseLineWidth;
-        ctx.shadowColor = isStarter ? hexToRgba(colors.starter, 0.72) : 'transparent';
-        ctx.shadowBlur = isStarter ? Math.max(8, Math.min(18, m.step * 0.28)) : 0;
-      }
-
-      for (let r = 0; r <= state.rows; r++) {
-        for (let c = 0; c < state.cols; c++) {
-          applyLineStyle(state.hLines[r][c]);
-          ctx.beginPath();
-          ctx.moveTo(m.x0 + c * m.step, m.y0 + r * m.step);
-          ctx.lineTo(m.x0 + (c + 1) * m.step, m.y0 + r * m.step);
-          ctx.stroke();
-        }
-      }
-
-      for (let r = 0; r < state.rows; r++) {
-        for (let c = 0; c <= state.cols; c++) {
-          applyLineStyle(state.vLines[r][c]);
-          ctx.beginPath();
-          ctx.moveTo(m.x0 + c * m.step, m.y0 + r * m.step);
-          ctx.lineTo(m.x0 + c * m.step, m.y0 + (r + 1) * m.step);
-          ctx.stroke();
-        }
-      }
-
-      ctx.globalAlpha = 1;
-      ctx.shadowBlur = 0;
-      ctx.shadowColor = 'transparent';
-      ctx.lineWidth = baseLineWidth;
-    }
-
-    function drawHover(m) {
-      if (!state.hover || state.gameOver || isPcTurn()) return;
-
-      ctx.strokeStyle = isDark() ? colors.hoverDark : colors.hoverLight;
-      ctx.lineWidth = Math.max(4, Math.min(9, m.step * 0.16));
-      ctx.globalAlpha = 0.65;
-      ctx.lineCap = 'round';
-
-      const { type, r, c } = state.hover;
-      ctx.beginPath();
-
-      if (type === 'h') {
-        ctx.moveTo(m.x0 + c * m.step, m.y0 + r * m.step);
-        ctx.lineTo(m.x0 + (c + 1) * m.step, m.y0 + r * m.step);
-      } else {
-        ctx.moveTo(m.x0 + c * m.step, m.y0 + r * m.step);
-        ctx.lineTo(m.x0 + c * m.step, m.y0 + (r + 1) * m.step);
-      }
-
-      ctx.stroke();
-      ctx.globalAlpha = 1;
-    }
-
-
-    function drawLastMove(m) {
-      if (!state.lastMove || state.gameOver && state.lastMovePlayer === null) return;
-
-      const move = state.lastMove;
-      const player = state.lastMovePlayer;
-      const color = playerColor(player);
-      const glowColor = hexToRgba(color, 0.7);
-
       ctx.save();
-      ctx.lineCap = 'round';
-
-      // Outer glow: makes the previous move obvious until the next player moves.
-      ctx.shadowColor = glowColor;
-      ctx.shadowBlur = Math.max(12, Math.min(26, m.step * 0.42));
-      ctx.strokeStyle = color;
-      ctx.globalAlpha = 0.92;
-      ctx.lineWidth = Math.max(7, Math.min(14, m.step * 0.24));
-      strokeMovePath(move, m);
-
-      // Bright inner stroke for contrast on both light and dark themes.
-      ctx.shadowBlur = 0;
-      ctx.strokeStyle = isDark() ? '#ffffff' : '#111827';
-      ctx.globalAlpha = 0.82;
-      ctx.lineWidth = Math.max(3, Math.min(7, m.step * 0.12));
-      strokeMovePath(move, m);
-
-      // Final colored center line so the owner is still clear.
-      ctx.strokeStyle = color;
-      ctx.globalAlpha = 1;
-      ctx.lineWidth = Math.max(2, Math.min(5, m.step * 0.08));
-      strokeMovePath(move, m);
-
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ctx.strokeStyle = cssVar('--line');
+      ctx.globalAlpha = isDark() ? 0.86 : 0.78;
+      ctx.lineWidth = Math.max(2.2, Math.min(5.2, m.step * 0.075));
+      for (let r = 0; r <= state.rows; r++) for (let c = 0; c < state.cols; c++) if (state.hLines[r][c]) strokeMove({ type: 'h', r, c }, m);
+      for (let r = 0; r < state.rows; r++) for (let c = 0; c <= state.cols; c++) if (state.vLines[r][c]) strokeMove({ type: 'v', r, c }, m);
       ctx.restore();
     }
 
-    function strokeMovePath(move, m) {
+    function drawPotentialLine(m) {
+      if (!selectedDot || !state.hoverDot || state.gameOver || isPcTurn()) return;
+      const move = moveFromDots(selectedDot, state.hoverDot);
+      if (!move || isLineTaken(move)) return;
+      ctx.save(); ctx.lineCap = 'round'; ctx.setLineDash([8, 8]); ctx.strokeStyle = cssVar('--line'); ctx.globalAlpha = 0.42; ctx.lineWidth = Math.max(2, Math.min(5, m.step * 0.07)); strokeMove(move, m); ctx.restore();
+    }
+
+    function drawLastMove(m) {
+      if (!state.lastMove) return;
+      ctx.save(); ctx.lineCap = 'round'; ctx.strokeStyle = cssVar('--ink'); ctx.globalAlpha = isDark() ? 0.25 : 0.18; ctx.lineWidth = Math.max(7, Math.min(13, m.step * 0.18)); strokeMove(state.lastMove, m); ctx.restore();
+    }
+
+    function drawDots(m) {
+      const radius = Math.max(4, Math.min(7.5, m.step * 0.12));
+      ctx.save(); ctx.fillStyle = cssVar('--dot');
+      for (let r = 0; r <= state.rows; r++) for (let c = 0; c <= state.cols; c++) { ctx.beginPath(); ctx.arc(m.x0 + c * m.step, m.y0 + r * m.step, radius, 0, Math.PI * 2); ctx.fill(); }
+      ctx.restore();
+    }
+
+    function drawSelectedDot(m) {
+      if (!selectedDot) return;
+      ctx.save(); ctx.strokeStyle = cssVar('--ink'); ctx.globalAlpha = 0.9; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.arc(m.x0 + selectedDot.c * m.step, m.y0 + selectedDot.r * m.step, Math.max(11, Math.min(20, m.step * 0.28)), 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+    }
+
+    function drawHoverDot(m) {
+      if (!state.hoverDot || state.gameOver || isPcTurn()) return;
+      if (selectedDot && selectedDot.r === state.hoverDot.r && selectedDot.c === state.hoverDot.c) return;
+      ctx.save(); ctx.strokeStyle = cssVar('--ink'); ctx.globalAlpha = 0.32; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(m.x0 + state.hoverDot.c * m.step, m.y0 + state.hoverDot.r * m.step, Math.max(9, Math.min(15, m.step * 0.22)), 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+    }
+
+    function strokeMove(move, m) {
       ctx.beginPath();
-      if (move.type === 'h') {
-        ctx.moveTo(m.x0 + move.c * m.step, m.y0 + move.r * m.step);
-        ctx.lineTo(m.x0 + (move.c + 1) * m.step, m.y0 + move.r * m.step);
-      } else {
-        ctx.moveTo(m.x0 + move.c * m.step, m.y0 + move.r * m.step);
-        ctx.lineTo(m.x0 + move.c * m.step, m.y0 + (move.r + 1) * m.step);
-      }
+      if (move.type === 'h') { ctx.moveTo(m.x0 + move.c * m.step, m.y0 + move.r * m.step); ctx.lineTo(m.x0 + (move.c + 1) * m.step, m.y0 + move.r * m.step); }
+      else { ctx.moveTo(m.x0 + move.c * m.step, m.y0 + move.r * m.step); ctx.lineTo(m.x0 + move.c * m.step, m.y0 + (move.r + 1) * m.step); }
       ctx.stroke();
     }
 
-    function describeMove(move) {
-      const orientation = move.type === 'h' ? 'horizontal' : 'vertical';
-      return `${orientation} line at row ${move.r + 1}, column ${move.c + 1}`;
-    }
-    function drawDots(m) {
-      const radius = Math.max(2.2, Math.min(6, m.step * 0.10));
-
-      for (let r = 0; r <= state.rows; r++) {
-        for (let c = 0; c <= state.cols; c++) {
-          ctx.fillStyle = isDark() ? colors.dotDark : colors.dotLight;
-          ctx.beginPath();
-          ctx.arc(m.x0 + c * m.step, m.y0 + r * m.step, radius, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
+    function pointerPosition(event) {
+      const rect = canvas.getBoundingClientRect();
+      const touch = event.touches ? event.touches[0] : event.changedTouches ? event.changedTouches[0] : event;
+      return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
     }
 
-    function nearestLine(x, y) {
+    function nearestDot(x, y) {
       const m = boardMetrics();
+      const hit = Math.max(18, Math.min(34, m.step * 0.42));
       let best = null;
-      const hit = Math.max(8, Math.min(18, m.step * 0.42));
-
-      for (let r = 0; r <= state.rows; r++) {
-        for (let c = 0; c < state.cols; c++) {
-          if (state.hLines[r][c]) continue;
-          const x1 = m.x0 + c * m.step;
-          const x2 = m.x0 + (c + 1) * m.step;
-          const yy = m.y0 + r * m.step;
-
-          if (x >= x1 - hit && x <= x2 + hit) {
-            const d = Math.abs(y - yy);
-            if (d <= hit && (!best || d < best.d)) best = { type: 'h', r, c, d };
-          }
-        }
+      for (let r = 0; r <= state.rows; r++) for (let c = 0; c <= state.cols; c++) {
+        const dx = x - (m.x0 + c * m.step), dy = y - (m.y0 + r * m.step);
+        const d = Math.hypot(dx, dy);
+        if (d <= hit && (!best || d < best.d)) best = { r, c, d };
       }
-
-      for (let r = 0; r < state.rows; r++) {
-        for (let c = 0; c <= state.cols; c++) {
-          if (state.vLines[r][c]) continue;
-          const xx = m.x0 + c * m.step;
-          const y1 = m.y0 + r * m.step;
-          const y2 = m.y0 + (r + 1) * m.step;
-
-          if (y >= y1 - hit && y <= y2 + hit) {
-            const d = Math.abs(x - xx);
-            if (d <= hit && (!best || d < best.d)) best = { type: 'v', r, c, d };
-          }
-        }
-      }
-
-      return best ? { type: best.type, r: best.r, c: best.c } : null;
+      return best ? { r: best.r, c: best.c } : null;
     }
 
-    function shuffledMoves() {
-      const moves = availableMoves();
-      for (let i = moves.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [moves[i], moves[j]] = [moves[j], moves[i]];
-      }
-      return moves;
+    function moveFromDots(a, b) {
+      if (!a || !b) return null;
+      if (a.r === b.r && Math.abs(a.c - b.c) === 1) return { type: 'h', r: a.r, c: Math.min(a.c, b.c) };
+      if (a.c === b.c && Math.abs(a.r - b.r) === 1) return { type: 'v', r: Math.min(a.r, b.r), c: a.c };
+      return null;
     }
 
-    function cloneGrid(grid) {
-      return grid.map(row => row.slice());
+    function isLineTaken(move) { return !move || (move.type === 'h' ? Boolean(state.hLines[move.r][move.c]) : Boolean(state.vLines[move.r][move.c])); }
+
+    function handleDotInput(event) {
+      if (!state || state.gameOver || isPcTurn()) return;
+      event.preventDefault();
+      const dot = nearestDot(...Object.values(pointerPosition(event)));
+      if (!dot) { selectedDot = null; state.hoverDot = null; draw(); return; }
+      if (!selectedDot) { selectedDot = dot; state.hoverDot = dot; draw(); return; }
+      if (selectedDot.r === dot.r && selectedDot.c === dot.c) { selectedDot = null; state.hoverDot = null; draw(); return; }
+      const move = moveFromDots(selectedDot, dot);
+      if (move && !isLineTaken(move)) { selectedDot = null; state.hoverDot = null; makeMove(move); return; }
+      selectedDot = dot; state.hoverDot = dot; draw();
     }
 
-    function countBoxSides(r, c) {
-      return [
-        state.hLines[r][c],
-        state.hLines[r + 1][c],
-        state.vLines[r][c],
-        state.vLines[r][c + 1]
-      ].filter(Boolean).length;
-    }
-
-    function affectedBoxes(move) {
-      const boxes = [];
-
-      if (move.type === 'h') {
-        if (move.r > 0) boxes.push([move.r - 1, move.c]);
-        if (move.r < state.rows) boxes.push([move.r, move.c]);
-      } else {
-        if (move.c > 0) boxes.push([move.r, move.c - 1]);
-        if (move.c < state.cols) boxes.push([move.r, move.c]);
-      }
-
-      return boxes;
-    }
-
-    function canUseAsStartingLine(move) {
-      if (!move) return false;
-      if (move.type === 'h' && state.hLines[move.r][move.c]) return false;
-      if (move.type === 'v' && state.vLines[move.r][move.c]) return false;
-
-      const boxes = affectedBoxes(move);
-
-      for (const [r, c] of boxes) {
-        if (state.owners[r][c] !== null) return false;
-
-        const existingSides = countBoxSides(r, c);
-        const sidesAfterMove = existingSides + 1;
-
-        // Starting layout must never create a 3-sided or 4-sided box.
-        // A box may begin with 0, 1, or 2 sides only.
-        if (sidesAfterMove > 2) return false;
-      }
-
-      return true;
-    }
-
-    function addRandomStartingLines(percent) {
-      if (!percent) return;
-
-      const target = Math.round(state.totalLines * (percent / 100));
-      let best = null;
-
-      for (let attempt = 0; attempt < 48; attempt++) {
-        state.hLines = Array.from({ length: state.rows + 1 }, () => Array(state.cols).fill(null));
-        state.vLines = Array.from({ length: state.rows }, () => Array(state.cols + 1).fill(null));
-        state.drawnLines = 0;
-
-        const moves = shuffledMoves();
-        for (const move of moves) {
-          if (state.drawnLines >= target) break;
-          if (canUseAsStartingLine(move)) {
-            setLine(move, 'starter');
-          }
-        }
-
-        if (!best || state.drawnLines > best.count) {
-          best = {
-            count: state.drawnLines,
-            hLines: cloneGrid(state.hLines),
-            vLines: cloneGrid(state.vLines)
-          };
-        }
-
-        if (state.drawnLines >= target) break;
-      }
-
-      if (best) {
-        state.hLines = best.hLines;
-        state.vLines = best.vLines;
-        state.drawnLines = best.count;
-      }
-
-      state.lastMove = null;
-      state.lastMovePlayer = null;
+    function handlePointerMove(event) {
+      if (!state || state.gameOver || isPcTurn()) return;
+      const pos = pointerPosition(event);
+      state.hoverDot = nearestDot(pos.x, pos.y);
+      draw();
     }
 
     function setLine(move, player) {
       if (move.type === 'h') state.hLines[move.r][move.c] = { player };
       else state.vLines[move.r][move.c] = { player };
-      state.drawnLines += 1;
+      state.drawnLines++;
+    }
+
+    function affectedBoxes(move) {
+      const boxes = [];
+      if (move.type === 'h') { if (move.r > 0) boxes.push([move.r - 1, move.c]); if (move.r < state.rows) boxes.push([move.r, move.c]); }
+      else { if (move.c > 0) boxes.push([move.r, move.c - 1]); if (move.c < state.cols) boxes.push([move.r, move.c]); }
+      return boxes;
     }
 
     function checkCompletedBoxes(move, player) {
-      const completed = [];
-      const candidates = [];
-
-      if (move.type === 'h') {
-        if (move.r > 0) candidates.push([move.r - 1, move.c]);
-        if (move.r < state.rows) candidates.push([move.r, move.c]);
-      } else {
-        if (move.c > 0) candidates.push([move.r, move.c - 1]);
-        if (move.c < state.cols) candidates.push([move.r, move.c]);
-      }
-
-      for (const [r, c] of candidates) {
+      let count = 0;
+      for (const [r, c] of affectedBoxes(move)) {
         if (state.owners[r][c] !== null) continue;
-        const closed =
-          state.hLines[r][c] &&
-          state.hLines[r + 1][c] &&
-          state.vLines[r][c] &&
-          state.vLines[r][c + 1];
-
-        if (closed) {
+        if (state.hLines[r][c] && state.hLines[r + 1][c] && state.vLines[r][c] && state.vLines[r][c + 1]) {
           state.owners[r][c] = player;
-          state.scores[player] += 1;
-          completed.push({ r, c });
+          state.scores[player]++;
+          count++;
         }
       }
-
-      return completed;
+      return count;
     }
 
     function makeMove(move) {
-      if (!move || state.gameOver) return;
-
-      if (
-        (move.type === 'h' && state.hLines[move.r][move.c]) ||
-        (move.type === 'v' && state.vLines[move.r][move.c])
-      ) return;
-
+      if (!move || state.gameOver || isLineTaken(move)) return;
       const player = state.current;
       setLine(move, player);
       state.lastMove = { ...move };
-      state.lastMovePlayer = player;
-
-      const completed = checkCompletedBoxes(move, player);
-      const name = state.names[player];
-
-      if (completed.length === 0) {
-        state.current = nextPlayerIndex();
-        setStatus(`${name} moved: ${describeMove(move)}. Highlighted line shows the latest move.`);
-      } else {
-        setStatus(`${name} moved: ${describeMove(move)} and scored ${completed.length} box${completed.length > 1 ? 'es' : ''}. Highlighted line shows the latest move.`);
-      }
-
-      state.hover = null;
-      finishIfOver();
-      updateUI();
-      draw();
-
-      if (!state.gameOver && isPcTurn()) {
-        setTimeout(pcMove, 350);
-      }
+      const scored = checkCompletedBoxes(move, player);
+      if (!scored) state.current = (state.current + 1) % state.players.length;
+      finishIfOver(); updateUI(); draw();
+      if (!state.gameOver && isPcTurn()) setTimeout(pcMove, 350);
     }
 
     function finishIfOver() {
       if (state.drawnLines < state.totalLines) return;
-
-      state.gameOver = true;
-
-      const maxScore = Math.max(...state.scores);
-      const winners = state.scores
-        .map((score, index) => ({ score, index, name: state.names[index] }))
-        .filter(item => item.score === maxScore);
-
+      state.gameOver = true; selectedDot = null; state.hoverDot = null;
+      const max = Math.max(...state.scores);
+      const winners = state.scores.map((s, i) => ({ s, i, name: state.names[i] })).filter(w => w.s === max);
       let title, subtitle, emoji;
-
-      if (winners.length === 1) {
-        const winner = winners[0];
-        stats.wins = stats.wins || {};
-        stats.wins[winner.name] = (stats.wins[winner.name] || 0) + 1;
-        title = `${winner.name} Wins!`;
-        subtitle = `Congratulations! ${winner.name} completed the most boxes.`;
-        emoji = '🎉';
-      } else {
-        stats.draws = (stats.draws || 0) + 1;
-        title = `It's a Draw!`;
-        subtitle = `${winners.map(winner => winner.name).join(' and ')} finished with the same score.`;
-        emoji = '🤝';
-      }
-
+      if (winners.length === 1) { title = `${winners[0].name} Wins!`; subtitle = `${winners[0].name} completed the most boxes.`; emoji = '🎉'; stats.wins = stats.wins || {}; stats.wins[winners[0].name] = (stats.wins[winners[0].name] || 0) + 1; }
+      else { title = `It's a Draw!`; subtitle = `${winners.map(w => w.name).join(' and ')} finished with the same score.`; emoji = '🤝'; stats.draws = (stats.draws || 0) + 1; }
       saveStats();
-      setStatus(title);
-      const scoreText = state.names.map((name, index) => `${name} ${state.scores[index]}`).join(' • ');
-      showWinnerOverlay(title, subtitle, scoreText, emoji);
+      els.winnerTitle.textContent = title; els.winnerSubtitle.textContent = subtitle; els.winnerEmoji.textContent = emoji; els.winnerScoreText.textContent = state.names.map((n, i) => `${n} ${state.scores[i]}`).join(' • '); els.winnerOverlay.classList.add('show');
     }
 
-    function showWinnerOverlay(title, subtitle, scoreText, emoji) {
-      els.winnerTitle.textContent = title;
-      els.winnerSubtitle.textContent = subtitle;
-      els.winnerScoreText.textContent = scoreText;
-      els.winnerEmoji.textContent = emoji;
-      els.winnerOverlay.classList.add('show');
-      launchCelebration();
-    }
+    function hideWinnerOverlay() { els.winnerOverlay.classList.remove('show'); }
 
-    function hideWinnerOverlay() {
-      els.winnerOverlay.classList.remove('show');
-      els.celebration.innerHTML = '';
-    }
-
-    function launchCelebration() {
-      els.celebration.innerHTML = '';
-      const palette = [...colors.players, '#facc15', '#22c55e', '#ec4899', '#38bdf8'];
-
-      for (let i = 0; i < 70; i++) {
-        const piece = document.createElement('span');
-        piece.className = 'confetti';
-        piece.style.left = `${Math.random() * 100}%`;
-        piece.style.background = palette[i % palette.length];
-        piece.style.animationDuration = `${3 + Math.random() * 2.8}s`;
-        piece.style.animationDelay = `${Math.random() * 0.5}s`;
-        piece.style.transform = `rotate(${Math.random() * 360}deg)`;
-        piece.style.opacity = `${0.75 + Math.random() * 0.25}`;
-        els.celebration.appendChild(piece);
-      }
-    }
-
-    function isPcTurn() {
-      return state && !state.gameOver && state.players[state.current]?.type === 'pc';
+    function updateUI() {
+      if (!state) return;
+      const players = getPlayers();
+      if (!state.gameOver) { state.players = players; state.names = players.map(p => p.name); }
+      els.scoreCards.forEach((card, i) => {
+        const active = i < state.players.length;
+        card.classList.toggle('is-hidden', !active);
+        if (!active) return;
+        els.scoreNames[i].textContent = state.names[i];
+        els.scoreValues[i].textContent = state.scores[i] || 0;
+        els.scoreChips[i].style.background = playerColor(i);
+      });
+      const currentColor = playerColor(state.current);
+      els.turnDot.style.background = currentColor;
+      els.turnDot.style.boxShadow = `0 0 0 5px ${hexToRgba(currentColor, 0.16)}`;
+      els.turnText.textContent = state.gameOver ? 'GAME OVER' : `TURN: ${state.names[state.current]}`;
+      els.gamesPlayed.textContent = stats.gamesPlayed || 0;
+      els.drawnLines.textContent = state.drawnLines;
+      els.remainingLines.textContent = state.totalLines - state.drawnLines;
+      els.boxesLeft.textContent = state.rows * state.cols - state.scores.reduce((a, b) => a + b, 0);
     }
 
     function availableMoves() {
       const moves = [];
-      for (let r = 0; r <= state.rows; r++) {
-        for (let c = 0; c < state.cols; c++) {
-          if (!state.hLines[r][c]) moves.push({ type: 'h', r, c });
-        }
-      }
-      for (let r = 0; r < state.rows; r++) {
-        for (let c = 0; c <= state.cols; c++) {
-          if (!state.vLines[r][c]) moves.push({ type: 'v', r, c });
-        }
-      }
+      for (let r = 0; r <= state.rows; r++) for (let c = 0; c < state.cols; c++) if (!state.hLines[r][c]) moves.push({ type: 'h', r, c });
+      for (let r = 0; r < state.rows; r++) for (let c = 0; c <= state.cols; c++) if (!state.vLines[r][c]) moves.push({ type: 'v', r, c });
       return moves;
     }
 
-    function wouldComplete(move) {
-      const candidates = [];
+    function countBoxSides(r, c) { return [state.hLines[r][c], state.hLines[r + 1][c], state.vLines[r][c], state.vLines[r][c + 1]].filter(Boolean).length; }
+    function canUseAsStartingLine(move) { return affectedBoxes(move).every(([r, c]) => state.owners[r][c] === null && countBoxSides(r, c) + 1 <= 2); }
+    function shuffle(arr) { for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [arr[i], arr[j]] = [arr[j], arr[i]]; } return arr; }
 
-      if (move.type === 'h') {
-        if (move.r > 0) candidates.push([move.r - 1, move.c]);
-        if (move.r < state.rows) candidates.push([move.r, move.c]);
-      } else {
-        if (move.c > 0) candidates.push([move.r, move.c - 1]);
-        if (move.c < state.cols) candidates.push([move.r, move.c]);
+    function addRandomStartingLines(percent) {
+      if (!percent) return;
+      const target = Math.round(state.totalLines * (percent / 100));
+      for (const move of shuffle(availableMoves())) {
+        if (state.drawnLines >= target) break;
+        if (canUseAsStartingLine(move)) setLine(move, 'starter');
       }
+    }
 
+    function wouldComplete(move) {
       let count = 0;
-
-      for (const [r, c] of candidates) {
+      for (const [r, c] of affectedBoxes(move)) {
         if (state.owners[r][c] !== null) continue;
-
         const top = state.hLines[r][c] || (move.type === 'h' && move.r === r && move.c === c);
         const bottom = state.hLines[r + 1][c] || (move.type === 'h' && move.r === r + 1 && move.c === c);
         const left = state.vLines[r][c] || (move.type === 'v' && move.r === r && move.c === c);
         const right = state.vLines[r][c + 1] || (move.type === 'v' && move.r === r && move.c === c + 1);
-
-        if (top && bottom && left && right) count += 1;
+        if (top && bottom && left && right) count++;
       }
-
       return count;
     }
 
     function thirdSideRisk(move) {
-      const candidates = [];
-
-      if (move.type === 'h') {
-        if (move.r > 0) candidates.push([move.r - 1, move.c]);
-        if (move.r < state.rows) candidates.push([move.r, move.c]);
-      } else {
-        if (move.c > 0) candidates.push([move.r, move.c - 1]);
-        if (move.c < state.cols) candidates.push([move.r, move.c]);
-      }
-
       let risk = 0;
-
-      for (const [r, c] of candidates) {
+      for (const [r, c] of affectedBoxes(move)) {
         if (state.owners[r][c] !== null) continue;
-
         const sides = [
           Boolean(state.hLines[r][c]) || (move.type === 'h' && move.r === r && move.c === c),
           Boolean(state.hLines[r + 1][c]) || (move.type === 'h' && move.r === r + 1 && move.c === c),
           Boolean(state.vLines[r][c]) || (move.type === 'v' && move.r === r && move.c === c),
           Boolean(state.vLines[r][c + 1]) || (move.type === 'v' && move.r === r && move.c === c + 1)
         ].filter(Boolean).length;
-
-        if (sides === 3) risk += 1;
+        if (sides === 3) risk++;
       }
-
       return risk;
     }
 
+    function isPcTurn() { return state && !state.gameOver && state.players[state.current]?.type === 'pc'; }
     function pcMove() {
       if (!isPcTurn()) return;
-
       const moves = availableMoves();
       if (!moves.length) return;
-
-      const scoring = moves
-        .map(move => ({ move, score: wouldComplete(move) }))
-        .filter(item => item.score > 0)
-        .sort((a, b) => b.score - a.score);
-
-      let chosen;
-      if (scoring.length) {
-        chosen = scoring[0].move;
-      } else {
-        const safe = moves.filter(move => thirdSideRisk(move) === 0);
-        const pool = safe.length ? safe : moves;
-        chosen = pool[Math.floor(Math.random() * pool.length)];
-      }
-
+      const scoring = moves.map(move => ({ move, score: wouldComplete(move) })).filter(x => x.score > 0).sort((a, b) => b.score - a.score);
+      let chosen = scoring.length ? scoring[0].move : null;
+      if (!chosen) { const safe = moves.filter(move => thirdSideRisk(move) === 0); const pool = safe.length ? safe : moves; chosen = pool[Math.floor(Math.random() * pool.length)]; }
       makeMove(chosen);
     }
 
-    function updateUI() {
-      if (!state) return;
+    function setTheme(theme) { document.body.classList.toggle('dark', theme === 'dark'); localStorage.setItem('dotsBoxesTheme', theme); requestAnimationFrame(() => { resizeCanvasForDisplay(); draw(); }); }
+    function setPanelHidden(hidden) { els.app.classList.toggle('panel-hidden', hidden); els.togglePanelBtn.textContent = hidden ? 'Show Options' : 'Hide Options'; localStorage.setItem('dotsBoxesPanelHidden', hidden ? 'yes' : 'no'); setTimeout(() => { resizeCanvasForDisplay(); draw(); }, 250); }
+    function resetStats() { stats = { gamesPlayed: 0, wins: {}, draws: 0 }; saveStats(); updateUI(); }
+    function applyPlayerColors() { els.playerColors.forEach((input, i) => { colors.players[i] = input.value; }); updateUI(); draw(); }
 
-      const players = getPlayers();
-      if (!state.gameOver) {
-        state.players = players;
-        state.names = players.map(player => player.name);
-      }
-
-      els.scoreCards.forEach((card, index) => {
-        const active = index < state.players.length;
-        card.classList.toggle('is-hidden', !active);
-        if (!active) return;
-
-        els.scoreNames[index].textContent = state.names[index];
-        els.scoreValues[index].textContent = state.scores[index] || 0;
-        els.scoreChips[index].style.background = playerColor(index);
-      });
-
-      const currentColor = playerColor(state.current);
-      els.turnDot.style.background = currentColor;
-      els.turnDot.style.boxShadow = `0 0 0 7px ${hexToRgba(currentColor, 0.18)}`;
-      els.turnText.textContent = state.gameOver ? 'GAME OVER' : `TURN: ${state.names[state.current]}`;
-
-      els.gamesPlayed.textContent = stats.gamesPlayed || 0;
-      els.drawnLines.textContent = state.drawnLines;
-      els.remainingLines.textContent = state.totalLines - state.drawnLines;
-      els.boxesLeft.textContent = state.rows * state.cols - state.scores.reduce((sum, score) => sum + score, 0);
-    }
-
-    function hexToRgba(hex, alpha) {
-      const value = hex.replace('#', '');
-      const r = parseInt(value.slice(0, 2), 16);
-      const g = parseInt(value.slice(2, 4), 16);
-      const b = parseInt(value.slice(4, 6), 16);
-      return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-    }
-
-    function setStatus(text) {
-      // Status text intentionally disabled; last-move highlight is enough.
-    }
-
-    function pointerPosition(event) {
-      const rect = canvas.getBoundingClientRect();
-      const touch = event.touches ? event.touches[0] : event;
-      return {
-        x: touch.clientX - rect.left,
-        y: touch.clientY - rect.top
-      };
-    }
-
-    canvas.addEventListener('mousemove', event => {
-      if (!state || state.gameOver || isPcTurn()) return;
-      const { x, y } = pointerPosition(event);
-      state.hover = nearestLine(x, y);
-      draw();
-    });
-
-    canvas.addEventListener('mouseleave', () => {
-      if (!state) return;
-      state.hover = null;
-      draw();
-    });
-
-    canvas.addEventListener('click', event => {
-      if (!state || isPcTurn()) return;
-      const { x, y } = pointerPosition(event);
-      makeMove(nearestLine(x, y));
-    });
-
-    canvas.addEventListener('touchstart', event => {
-      if (!state || isPcTurn()) return;
-      event.preventDefault();
-      const { x, y } = pointerPosition(event);
-      makeMove(nearestLine(x, y));
-    }, { passive: false });
+    canvas.addEventListener('click', handleDotInput);
+    canvas.addEventListener('touchstart', handleDotInput, { passive: false });
+    canvas.addEventListener('mousemove', handlePointerMove);
+    canvas.addEventListener('touchmove', e => { e.preventDefault(); handlePointerMove(e); }, { passive: false });
+    canvas.addEventListener('mouseleave', () => { if (state) { state.hoverDot = null; draw(); } });
+    canvas.addEventListener('touchend', e => e.preventDefault(), { passive: false });
 
     els.newGameBtn.addEventListener('click', () => newGame(true));
-    els.startHideBtn.addEventListener('click', () => {
-      newGame(true);
-      setPanelHidden(true);
-    });
+    els.startHideBtn.addEventListener('click', () => { newGame(true); setPanelHidden(true); });
     els.resetStatsBtn.addEventListener('click', resetStats);
     els.rowsSelect.addEventListener('change', () => newGame(true));
     els.colsSelect.addEventListener('change', () => newGame(true));
     els.themeSelect.addEventListener('change', () => setTheme(els.themeSelect.value));
-
-    els.togglePanelBtn.addEventListener('click', () => {
-      setPanelHidden(!els.app.classList.contains('panel-hidden'));
-    });
-
-    els.playerColors.forEach(input => input.addEventListener('input', applyPlayerColors));
-
-    els.playerCountSelect.addEventListener('change', () => {
-      syncPlayerSetupVisibility();
-      newGame(true);
-    });
-
     els.startingLinesSelect.addEventListener('change', () => newGame(true));
-
-    els.playerTypes.forEach(select => {
-      select.addEventListener('change', () => {
-        syncPlayerSetupVisibility();
-        newGame(true);
-      });
-    });
-
+    els.playerCountSelect.addEventListener('change', () => newGame(true));
+    els.playerTypes.forEach(select => select.addEventListener('change', () => newGame(true)));
     els.playerNames.forEach(input => input.addEventListener('input', updateUI));
-
+    els.playerColors.forEach(input => input.addEventListener('input', applyPlayerColors));
+    els.togglePanelBtn.addEventListener('click', () => setPanelHidden(!els.app.classList.contains('panel-hidden')));
     els.playAgainBtn.addEventListener('click', () => newGame(true));
     els.closeWinnerBtn.addEventListener('click', hideWinnerOverlay);
-    els.winnerOverlay.addEventListener('click', (e) => {
-      if (e.target === els.winnerOverlay) hideWinnerOverlay();
-    });
+    els.winnerOverlay.addEventListener('click', e => { if (e.target === els.winnerOverlay) hideWinnerOverlay(); });
+    window.addEventListener('resize', () => { resizeCanvasForDisplay(); draw(); });
 
-    window.addEventListener('resize', () => {
-      resizeCanvasForDisplay();
-      draw();
-    });
-
+    colors.players.forEach((color, i) => { els.playerColors[i].value = color; });
     const savedTheme = localStorage.getItem('dotsBoxesTheme') || 'dark';
     els.themeSelect.value = savedTheme;
-    els.playerColors.forEach((input, index) => {
-      input.value = colors.players[index];
-    });
-
-    syncPlayerSetupVisibility();
+    syncPlayers();
     setTheme(savedTheme);
     newGame(false);
-
-    const savedPanelHidden = localStorage.getItem('dotsBoxesPanelHidden') === 'yes';
-    setPanelHidden(savedPanelHidden);
+    setPanelHidden(localStorage.getItem('dotsBoxesPanelHidden') === 'yes');
   </script>
 </body>
 </html>
